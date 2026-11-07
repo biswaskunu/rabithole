@@ -1,5 +1,6 @@
 use axum::extract::Path;
 use axum::Json;
+use axum::http::StatusCode;
 use serde::{Deserialize, Serialize};
 
 use crate::db::init_pool;
@@ -23,6 +24,7 @@ pub struct TopicResponse {
 // Payload cap: max 10 related topics per node to keep JSON small for mobile
 pub async fn get_topic(Path(slug): Path<String>) -> Json<TopicResponse> {
     let mock_topic = TopicData {
+        id: 0,
         slug: slug.clone(),
         title: format!("Topic: {}", slug),
         summary: "Sample summary".to_string(),

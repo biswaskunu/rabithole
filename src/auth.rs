@@ -1,10 +1,13 @@
 use axum::{
     extract::Form,
     http::StatusCode,
+    routing::get,
     routing::post,
     Json,
     Router,
 };
+use crate::routes::search;
+use crate::routes::topics;
 use serde::{Deserialize, Serialize};
 
 use crate::db::{init_pool, generate_daily_trail, DailyTrailResponse, update_streak, save_map_from_daily_trail};

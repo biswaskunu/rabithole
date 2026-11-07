@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
+use serde_json;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TopicData {
+    pub id: i32,
     pub slug: String,
     pub title: String,
     pub summary: String,
@@ -15,6 +17,7 @@ pub fn extract_links_from_html(_html: &str) -> Vec<String> {
 
 pub async fn fetch_wikipedia(_topic: &str) -> Result<TopicData, String> {
     Ok(TopicData {
+        id: 0,
         slug: "jee-mathematics".to_string(),
         title: "JEE Mathematics".to_string(),
         summary: "Sample summary from Wikipedia".to_string(),
@@ -22,6 +25,9 @@ pub async fn fetch_wikipedia(_topic: &str) -> Result<TopicData, String> {
     })
 }
 
+use sqlx::FromRow;
+
+#[derive(FromRow, Debug, Deserialize, Serialize)]
 pub struct QuizQuestion {
     pub id: i32,
     pub topic_id: i32,

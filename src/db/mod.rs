@@ -1,4 +1,4 @@
-use sqlx::PgPool;
+use sqlx::{PgPool, Row};
 use serde::{Deserialize, Serialize};
 
 pub async fn init_pool(database_url: &str) -> Result<PgPool, sqlx::Error> {
@@ -25,7 +25,7 @@ pub async fn generate_daily_trail(pool: &PgPool, user_id: i32) -> Result<DailyTr
     // Check if today's trail already exists
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
     
-    let existing: Option<sqlx::Row> = sqlx::query_as(
+    let existing = sqlx::query(
         "SELECT date, topic_ids FROM daily_trails WHERE date = $1",
     )
         .bind(&today)
@@ -34,7 +34,7 @@ pub async fn generate_daily_trail(pool: &PgPool, user_id: i32) -> Result<DailyTr
         .ok()
         .flatten();
 
-    let topic_ids: Vec<i32> = if let Some(row) = existing {
+    let topic_ids: Vec<i32> = if let Some(ref row) = existing {
         row.get::<Vec<i32>, _>("topic_ids")
     } else {
         // Pick 5 topics: prioritize topics user hasn't seen recently,
@@ -44,7 +44,7 @@ pub async fn generate_daily_trail(pool: &PgPool, user_id: i32) -> Result<DailyTr
         )
             .fetch_all(pool)
             .await
-            .unwrap_or_default();
+            .unwrap_or_default();;
 
         // Simple algorithm: pick 5 random topics, ensure variety
         let mut selected: Vec<i32> = Vec::new();
@@ -93,23 +93,22 @@ pub async fn generate_daily_trail(pool: &PgPool, user_id: i32) -> Result<DailyTr
         Vec::new()
     } else {
         let placeholders: String = topic_ids.iter()
-            .map(|_| "$")
-            .enumerate()
-            .map(|(i, _)| format!("${}", i + 1))
+            .map(|_| "$1")
             .collect::<Vec<_>>()
             .join(", ");
 
         let query = if topic_ids.len() == 1 {
-            format!("SELECT id, slug, title, summary FROM topics WHERE id IN ({})", placeholders)
+            format!("SELECT id, slug, title, summary FROM topics WHERE id = $1")
         } else {
             format!("SELECT id, slug, title, summary FROM topics WHERE id IN ({})", placeholders)
         };
 
-        let params: Vec<&(dyn sqlx::Encode<sqlx::Postgres, i32>)> = topic_ids.iter().map(|id| id as &i32).collect();
+        let params: Vec<i32> = topic_ids.iter().map(|id| *id).collect();
         let rows = sqlx::query_as::<_, DailyTrailTopic>(&query)
-            .fetch_all_by_idx(pool, &params)
+            .fetch_all(pool)
             .await
-            .unwrap_or_default()
+            .unwrap_or_default();
+        rows
     };
 
     Ok(DailyTrailResponse {
@@ -189,9 +188,9 @@ pub async fn save_map_from_daily_trail(pool: &PgPool, user_id: i32, topic_ids: &
         .fetch_one(pool)
         .await
         .map(|(c,)| c)
-        .unwrap_or(0);
+        .unwrap_or((0,));
 
-    if map_count >= 5 {
+    if map_count >= (5,) {
         return Err(sqlx::Error::RowNotFound);
     }
 
