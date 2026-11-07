@@ -7,7 +7,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::db::{init_pool, generate_daily_trail, DailyTrailResponse};
+use crate::db::{init_pool, generate_daily_trail, DailyTrailResponse, update_streak};
 
 #[derive(Deserialize)]
 pub struct RegisterPayload {
@@ -45,6 +45,7 @@ pub fn setup_routes() -> Router {
         .route("/topics/:slug/quiz", get(topics::get_topic_quiz))
         .route("/topics/:slug/quiz/submit", post(topics::submit_topic_quiz))
         .route("/daily-trail", get(get_daily_trail))
+        .route("/streak", get(get_streak))
         .route("/auth/register", post(register))
         .route("/auth/login", post(login))
 }
@@ -58,6 +59,23 @@ async fn get_daily_trail() -> (StatusCode, Json<DailyTrailResponse>) {
         topics: Vec::new(),
     });
     (StatusCode::OK, Json(trail))
+}
+
+async fn get_streak() -> (StatusCode, Json<(i32, i32, String)>) {
+    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+
+    let streak: (i32, i32, Option<String>) = sqlx::query_as(
+        "SELECT current_streak, longest_streak, last_active_date FROM streaks WHERE user_id = 1",
+    )
+        .fetch_one(&pool)
+        .await
+        .ok()
+        .unwrap_or((0, 0, None));
+
+    let (current, longest, last) = streak;
+    let last_active = last.unwrap_or_else(|| chrono::Local::now().format("%Y-%m-%d").to_string());
+
+    (StatusCode::OK, Json((current, longest, last_active)))
 }
 
 async fn register(Form(_payload): Form<RegisterPayload>) -> (StatusCode, Json<AuthResponse>) {

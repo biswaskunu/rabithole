@@ -118,6 +118,69 @@ pub async fn generate_daily_trail(pool: &PgPool, user_id: i32) -> Result<DailyTr
     })
 }
 
+pub async fn update_streak(pool: &PgPool, user_id: i32, completed_today: bool) -> Result<(i32, i32), sqlx::Error> {
+    let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+
+    // Get current streak state
+    let streak: (i32, i32, Option<String>) = sqlx::query_as(
+        "SELECT current_streak, longest_streak, last_active_date FROM streaks WHERE user_id = $1",
+    )
+        .bind(user_id)
+        .fetch_one(pool)
+        .await
+        .ok()
+        .unwrap_or((0, 0, None));
+
+    let (current_streak, longest_streak, last_active) = streak;
+
+    let (new_current, new_longest) = if let Some(last_date) = last_active {
+        if last_date == today {
+            // User was active today, increment streak
+            (current_streak + 1, longest_streak.max(current_streak + 1))
+        } else if !completed_today {
+            // User missed a day, reset streak
+            (0, longest_streak)
+        } else {
+            // User completed yesterday but not today yet (edge case)
+            (current_streak + 1, longest_streak.max(current_streak + 1))
+        }
+    } else {
+        // First time, set to 1 if completed_today
+        if completed_today {
+            (1, 1)
+        } else {
+            (0, 0)
+        }
+    };
+
+    // Update streaks table
+    sqlx::query(
+        "UPDATE streaks SET current_streak = $1, longest_streak = $2, last_active_date = $3 WHERE user_id = $4",
+    )
+        .bind(new_current)
+        .bind(new_longest)
+        .bind(&today)
+        .bind(user_id)
+        .execute(pool)
+        .await
+        .ok();
+
+    // Ensure row exists
+    sqlx::query(
+        "INSERT INTO streaks (user_id, current_streak, longest_streak, last_active_date) SELECT $1, $2, $3, $4 WHERE NOT EXISTS (SELECT 1 FROM streaks WHERE user_id = $5)",
+    )
+        .bind(user_id as i32)
+        .bind(new_current)
+        .bind(new_longest)
+        .bind(&today)
+        .bind(user_id as i32)
+        .execute(pool)
+        .await
+        .ok();
+
+    Ok((new_current, new_longest))
+}
+
 #[derive(Serialize)]
 pub struct DailyTrailTopic {
     pub id: i32,
