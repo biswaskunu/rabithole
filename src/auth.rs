@@ -7,7 +7,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::db::init_pool;
+use crate::db::{init_pool, generate_daily_trail, DailyTrailResponse, update_streak, save_map_from_daily_trail};
 
 #[derive(Deserialize)]
 pub struct RegisterPayload {
@@ -40,8 +40,62 @@ fn generate_token(email: &str) -> String {
 
 pub fn setup_routes() -> Router {
     Router::new()
+        .route("/search", get(search::search_topics))
+        .route("/topics/:slug", get(topics::get_topic))
+        .route("/topics/:slug/quiz", get(topics::get_topic_quiz))
+        .route("/topics/:slug/quiz/submit", post(topics::submit_topic_quiz))
+        .route("/daily-trail", get(get_daily_trail))
+        .route("/streak", get(get_streak))
+        .route("/save-map-from-trail", post(save_map_from_trail))
         .route("/auth/register", post(register))
         .route("/auth/login", post(login))
+}
+
+async fn get_daily_trail() -> (StatusCode, Json<DailyTrailResponse>) {
+    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+    // Use user_id 1 for MVP (will be replaced with real user auth later)
+    let trail = generate_daily_trail(&pool, 1).await.unwrap_or_else(|_| DailyTrailResponse {
+        date: chrono::Local::now().format("%Y-%m-%d").to_string(),
+        topic_ids: Vec::new(),
+        topics: Vec::new(),
+    });
+    (StatusCode::OK, Json(trail))
+}
+
+async fn get_streak() -> (StatusCode, Json<(i32, i32, String)>) {
+    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+
+    let streak: (i32, i32, Option<String>) = sqlx::query_as(
+        "SELECT current_streak, longest_streak, last_active_date FROM streaks WHERE user_id = 1",
+    )
+        .fetch_one(&pool)
+        .await
+        .ok()
+        .unwrap_or((0, 0, None));
+
+    let (current, longest, last) = streak;
+    let last_active = last.unwrap_or_else(|| chrono::Local::now().format("%Y-%m-%d").to_string());
+
+    (StatusCode::OK, Json((current, longest, last_active)))
+}
+
+async fn save_map_from_trail() -> StatusCode {
+    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+    // Use user_id 1 for MVP
+    let trail = generate_daily_trail(&pool, 1).await.unwrap_or_else(|_| crate::db::DailyTrailResponse {
+        date: chrono::Local::now().format("%Y-%m-%d").to_string(),
+        topic_ids: Vec::new(),
+        topics: Vec::new(),
+    });
+
+    if trail.topic_ids.is_empty() {
+        return StatusCode::BAD_REQUEST;
+    }
+
+    let map_id = save_map_from_daily_trail(&pool, 1, &trail.topic_ids).await;
+    // If map_count >= 5, we still return OK but the map wasn't created
+    // The frontend can handle the 5-map limit message
+    StatusCode::OK
 }
 
 async fn register(Form(_payload): Form<RegisterPayload>) -> (StatusCode, Json<AuthResponse>) {

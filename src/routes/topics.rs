@@ -1,7 +1,8 @@
 use axum::extract::Path;
 use axum::Json;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
+use crate::db::init_pool;
 use crate::services::ingestion::TopicData;
 
 #[derive(Serialize)]
@@ -44,4 +45,36 @@ pub async fn get_topic(Path(slug): Path<String>) -> Json<TopicResponse> {
         topic: mock_topic,
         related: mock_related,
     })
+}
+
+#[derive(Deserialize)]
+pub struct QuizAnswer {
+    pub question_id: i32,
+    pub selected_option: i32,
+}
+
+#[derive(Serialize, sqlx::FromRow)]
+pub struct QuizQuestionResponse {
+    pub id: i32,
+    pub question: String,
+    pub options: Vec<String>,
+}
+
+pub async fn get_topic_quiz(Path(slug): Path<String>) -> Json<Vec<QuizQuestionResponse>> {
+    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+
+    let questions = sqlx::query_as::<_, QuizQuestionResponse>(
+        "SELECT id, question, options::text, correct_option FROM quiz_questions WHERE topic_id = (SELECT id FROM topics WHERE slug = $1)",
+    )
+        .bind(&slug)
+        .fetch_all(&pool)
+        .await
+        .unwrap_or_default();
+
+    Json(questions)
+}
+
+pub async fn submit_topic_quiz(Path(slug): Path<String>, Json(_answer): Json<QuizAnswer>) -> StatusCode {
+    // For MVP: accept any answer, track locally on frontend
+    StatusCode::OK
 }

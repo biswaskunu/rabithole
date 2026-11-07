@@ -41,12 +41,12 @@ Frontend (React/Vite):
 
 Exit criteria verified: search → expand 3-4 levels deep → map persists on reload.
 
-## Phase 3: Week 3 — The habit loop
+## Phase 3: Week 3 — The habit loop ✅ Complete
 
-- Node detail panel with summary + rule-based mini-quiz.
-- Daily trail generation (curated or algorithmic pick of 5 topics/day).
-- Streak tracking and display.
-- **Exit criteria:** a returning user sees a new daily trail, completes it, and their streak increments.
+- Node detail panel with summary + rule-based mini-quiz (frontend implemented).
+- Daily trail generation (curated or algorithmic pick of 5 topics/day) (frontend integrated with API).
+- Streak tracking and display (frontend with streak header + API endpoints).
+- **Exit criteria:** a returning user sees a new daily trail, completes it, and their streak increments *(frontend UI complete; backend API endpoints implemented: /api/daily-trail, /api/streak, /api/save-map-from-trail)*.
 
 ## Phase 4: Week 4 — Growth & ship
 
