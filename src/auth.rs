@@ -7,7 +7,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::db::init_pool;
+use crate::db::{init_pool, generate_daily_trail, DailyTrailResponse};
 
 #[derive(Deserialize)]
 pub struct RegisterPayload {
@@ -44,6 +44,20 @@ pub fn setup_routes() -> Router {
         .route("/topics/:slug", get(topics::get_topic))
         .route("/topics/:slug/quiz", get(topics::get_topic_quiz))
         .route("/topics/:slug/quiz/submit", post(topics::submit_topic_quiz))
+        .route("/daily-trail", get(get_daily_trail))
+        .route("/auth/register", post(register))
+        .route("/auth/login", post(login))
+}
+
+async fn get_daily_trail() -> (StatusCode, Json<DailyTrailResponse>) {
+    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+    // Use user_id 1 for MVP (will be replaced with real user auth later)
+    let trail = generate_daily_trail(&pool, 1).await.unwrap_or_else(|_| DailyTrailResponse {
+        date: chrono::Local::now().format("%Y-%m-%d").to_string(),
+        topic_ids: Vec::new(),
+        topics: Vec::new(),
+    });
+    (StatusCode::OK, Json(trail))
 }
 
 async fn register(Form(_payload): Form<RegisterPayload>) -> (StatusCode, Json<AuthResponse>) {
