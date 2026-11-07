@@ -25,8 +25,8 @@ pub async fn get_topic(Path(slug): Path<String>) -> Json<TopicResponse> {
         slug: slug.clone(),
         title: format!("Topic: {}", slug),
         summary: "Sample summary".to_string(),
-        links: vec!["link1".to_string(), "link2".to_string(), "link3".to_string(),
-                    "link4".to_string(), "link5".to_string(), "link6".to_string()],
+        links: vec!["algebra".to_string(), "calculus".to_string(), "geometry".to_string(),
+                     "trigonometry".to_string(), "statistics".to_string(), "physics".to_string()],
     };
 
     // Depth limit: only 6 related topics (capped at 10 per Architecture.md:56)
