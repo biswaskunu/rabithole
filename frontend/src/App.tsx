@@ -76,6 +76,14 @@ export default function App() {
     topics: [] as TopicData[],
   })
 
+  const [streakCurrent, setStreakCurrent] = useState(0)
+  const [streakLongest, setStreakLongest] = useState(0)
+  const [lastActive, setLastActive] = useState()
+  const [dailyTrail, setDailyTrail] = useState({
+    error: false,
+    topics: [] as TopicData[],
+  })
+
   // Load saved maps from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('rabithole_maps')
@@ -109,6 +117,24 @@ export default function App() {
       }
     }
     fetchDailyTrail()
+  }, [])
+
+  // Fetch streak on mount
+  useEffect(() => {
+    const fetchStreak = async () => {
+      try {
+        const response = await axios.get('/api/streak')
+        setStreakCurrent(response.data.current)
+        setStreakLongest(response.data.longest)
+        setLastActive(response.data.last_active)
+      } catch (err) {
+        // Default values on error
+        setStreakCurrent(0)
+        setStreakLongest(0)
+        setLastActive('Never')
+      }
+    }
+    fetchStreak()
   }, [])
 
   // Search for topics
@@ -408,6 +434,14 @@ export default function App() {
     <div style={{ minHeight: '100vh', padding: '20px' }}>
       <div style={{ marginBottom: '20px' }}>
         <h2>RabitHole - Phase 2</h2>
+
+        {/* Streak display header */}
+        <div style={{ margin: "20px 0", padding: "12px", background: "#f0f0f0", borderRadius: "8px" }}>
+          <span style={{ marginRight: "16px", fontWeight: "bold" }}>🔥 {streakCurrent}</span>
+          <span style={{ marginRight: "16px" }}>Longest: {streakLongest}</span>
+          <span style={{ fontSize: "12px", color: "#6b6375" }}>Last: {lastActive}</span>
+        </div>
+
 
         {/* Daily trail section - shown on app mount for returning users */}
         <div style={{ marginBottom: '20px', padding: '12px', border: '1px solid #e5e4e7', borderRadius: '8px', background: '#f8f5f0' }}>
