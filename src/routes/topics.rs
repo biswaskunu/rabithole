@@ -1,7 +1,8 @@
 use axum::extract::Path;
 use axum::Json;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
+use crate::db::init_pool;
 use crate::services::ingestion::TopicData;
 
 #[derive(Serialize)]
@@ -52,7 +53,7 @@ pub struct QuizAnswer {
     pub selected_option: i32,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, sqlx::FromRow)]
 pub struct QuizQuestionResponse {
     pub id: i32,
     pub question: String,

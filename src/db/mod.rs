@@ -1,4 +1,5 @@
 use sqlx::PgPool;
+use serde::{Deserialize, Serialize};
 
 pub async fn init_pool(database_url: &str) -> Result<PgPool, sqlx::Error> {
     // Use database URL with search_path=public to ensure tables are found
@@ -239,7 +240,7 @@ pub async fn save_map_from_daily_trail(pool: &PgPool, user_id: i32, topic_ids: &
     Ok(map_id)
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, sqlx::FromRow)]
 pub struct DailyTrailTopic {
     pub id: i32,
     pub slug: String,

@@ -5,3 +5,5 @@ target
 **/mutants.out*/
 rustc-ice-*.txt
 /target
+/node_modules
+/frontend/node_modules
