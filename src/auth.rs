@@ -10,7 +10,7 @@ use crate::routes::search;
 use crate::routes::topics;
 use serde::{Deserialize, Serialize};
 
-use crate::db::{init_pool, generate_daily_trail, DailyTrailResponse, update_streak, save_map_from_daily_trail};
+use crate::db::{init_pool, generate_daily_trail, DailyTrailResponse, save_map_from_daily_trail};
 
 #[derive(Deserialize)]
 pub struct RegisterPayload {

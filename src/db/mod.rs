@@ -1,5 +1,5 @@
 use sqlx::{PgPool, Row};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 pub async fn init_pool(database_url: &str) -> Result<PgPool, sqlx::Error> {
     // Use database URL with search_path=public to ensure tables are found
@@ -44,7 +44,7 @@ pub async fn generate_daily_trail(pool: &PgPool, user_id: i32) -> Result<DailyTr
         )
             .fetch_all(pool)
             .await
-            .unwrap_or_default();;
+            .unwrap_or_default();
 
         // Simple algorithm: pick 5 random topics, ensure variety
         let mut selected: Vec<i32> = Vec::new();

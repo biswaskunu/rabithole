@@ -1,4 +1,3 @@
-use sqlx::PgPool;
 
 #[tokio::main]
 async fn main() {
