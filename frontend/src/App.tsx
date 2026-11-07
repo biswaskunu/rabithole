@@ -70,6 +70,8 @@ export default function App() {
     answers: [],
   })
 
+  const [trailCompleted, setTrailCompleted] = useState(false)
+
   const [dailyTrailIsLoading, setDailyTrailIsLoading] = useState(true)
   const [dailyTrail, setDailyTrail] = useState({
     error: false,
@@ -77,6 +79,8 @@ export default function App() {
   })
 
   const [streakCurrent, setStreakCurrent] = useState(0)
+  const [streakLongest, setStreakLongest] = useState(0)
+  const [lastActive, setLastActive] = useState(
   const [streakLongest, setStreakLongest] = useState(0)
   const [lastActive, setLastActive] = useState()
   const [dailyTrail, setDailyTrail] = useState({
@@ -248,8 +252,24 @@ export default function App() {
   })
 
   // Submit quiz answer and move to next question
-  const answerQuiz = (optionIndex: number) => {
-    const q = selectedTopic?.quizQuestions?.[quizState.questionIndex]
+  const onTrailComplete = async () => {
+    setDailyTrailIsLoading(true)
+    try {
+      // Update streak
+      const streakRes = await axios.get('/api/streak')
+      setStreakCurrent(streakRes.data.current)
+      setStreakLongest(streakRes.data.longest)
+      setLastActive(streakRes.data.last_active)
+
+      // Save map from daily trail
+      await axios.post('/api/save-map-from-trail')
+      setTrailCompleted(true)
+    } catch (err) {
+      console.error('Trail complete error:', err)
+    } finally {
+      setDailyTrailIsLoading(false)
+    }
+  }    const q = selectedTopic?.quizQuestions?.[quizState.questionIndex]
     if (!q) return
 
     const isCorrect = optionIndex === q.correctOption
@@ -264,12 +284,14 @@ export default function App() {
         answers: newAnswers,
       })
     } else {
+      // Daily trail topic completed - check if all 5 topics done
       setQuizState({
         active: false,
         questionIndex: selectedTopic?.quizQuestions?.length || 0,
         score: newScore,
         answers: newAnswers,
       })
+      // TODO: dispatch trail completion event
     }
   }
 
@@ -469,10 +491,55 @@ export default function App() {
                   onClick={() => loadTopic(topic as TopicData)}
                 >
                   <h4>{topic.title}</h4>
-                  <p style={{ fontSize: '12px', color: '#6b6375', margin: '4px 0' }>{topic.summary || ''}</p>
+                  <p style={{ fontSize: '12px', color: '#6b6375', margin: '4px 0' }}{' '}{topic.summary || ''}</p>
                 </div>
               ))}
             </div>
+
+            {trailCompleted ? (
+              <div style={{ marginTop: '16px', padding: '16px', background: '#e5f7e5', border: '1px solid #a8d5a8', borderRadius: '8px' }}>
+                <h3>🎉 Trail Complete!</h3>
+                <p>You've explored all 5 daily topics!</p>
+                <p>Your streak has been incremented.</p>
+                <button
+                  onClick={() => {
+                    setTrailCompleted(false)
+                    setDailyTrailIsLoading(true)
+                    axios.get('/api/daily-trail').then(() => {
+                      axios.post('/api/save-map-from-trail').then(() => {
+                        setTimeout(() => setDailyTrailIsLoading(false), 500)
+                      })
+                    })
+                  }}
+                  style={{
+                    marginTop: '8px',
+                    padding: '8px 16px',
+                    background: '#aa3bff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Start new trail
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => onTrailComplete()}
+                style={{
+                  marginTop: '16px',
+                  padding: '8px 16px',
+                  background: '#aa3bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              >
+                Complete Trail
+              </button>
+            )}
           )}
         </div>
 
