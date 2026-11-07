@@ -10,3 +10,7 @@ sqlx = { version = "0.7", features = ["postgres", "runtime-tokio"] }
 serde = { version = "1.0", features = ["derive"] }
 tokio-postgres = "0.7"
 chrono = "0.4"
+
+[[bin]]
+name = "ingestion_cli"
+path = "src/bin/ingestion_cli.rs"
