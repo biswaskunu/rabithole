@@ -2,6 +2,7 @@ use axum::Router;
 use std::net::SocketAddr;
 
 mod auth;
+mod db;
 mod routes;
 mod services;
 

@@ -29,14 +29,16 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v3
 
-      - name: Install dependencies (backend)
+      - name: Backend dependencies and build
         working-directory: .
         run: |
           cargo update
+          cargo test
           cargo build --release
 
       - name: Install dependencies (frontend)
         working-directory: frontend
         run: |
           pnpm install
+          pnpm run lint
           pnpm run build

@@ -7,24 +7,35 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+use crate::db::init_pool;
+
+#[derive(Deserialize)]
 pub struct RegisterPayload {
     pub email: String,
     pub password: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub struct LoginPayload {
     pub email: String,
     pub password: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 pub struct AuthResponse {
     pub access_token: String,
     pub refresh_token: String,
     pub token_type: String,
     pub expires_in: u64,
+}
+
+fn generate_token(email: &str) -> String {
+    use std::time::SystemTime;
+    let now = SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    format!("{}:{}", email, now)
 }
 
 pub fn setup_routes() -> Router {
@@ -34,7 +45,9 @@ pub fn setup_routes() -> Router {
 }
 
 async fn register(Form(_payload): Form<RegisterPayload>) -> (StatusCode, Json<AuthResponse>) {
-    // TODO: hash password & persist to users table (Phase 0 schema)
+    let _pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+
+    // For MVP: accept any credentials, issue mock tokens (like original code)
     let token = "mock-access-token-for-dev";
     let body = AuthResponse {
         access_token: token.to_string(),
@@ -46,8 +59,9 @@ async fn register(Form(_payload): Form<RegisterPayload>) -> (StatusCode, Json<Au
 }
 
 async fn login(Form(_payload): Form<LoginPayload>) -> (StatusCode, Json<AuthResponse>) {
-    // TODO: verify credentials against DB
-    // For MVP: accept any credentials, issue mock tokens
+    let _pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+
+    // For MVP: accept any credentials, issue mock tokens (like original code)
     let token = "mock-access-token-for-dev";
     let body = AuthResponse {
         access_token: token.to_string(),
