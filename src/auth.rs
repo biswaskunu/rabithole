@@ -40,8 +40,10 @@ fn generate_token(email: &str) -> String {
 
 pub fn setup_routes() -> Router {
     Router::new()
-        .route("/auth/register", post(register))
-        .route("/auth/login", post(login))
+        .route("/search", get(search::search_topics))
+        .route("/topics/:slug", get(topics::get_topic))
+        .route("/topics/:slug/quiz", get(topics::get_topic_quiz))
+        .route("/topics/:slug/quiz/submit", post(topics::submit_topic_quiz))
 }
 
 async fn register(Form(_payload): Form<RegisterPayload>) -> (StatusCode, Json<AuthResponse>) {
