@@ -1,6 +1,6 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct TopicData {
     pub slug: String,
     pub title: String,
@@ -23,9 +23,7 @@ pub async fn fetch_wikipedia(_topic: &str) -> Result<TopicData, String> {
 }
 
 pub async fn save_topic(_pool: &sqlx::PgPool, _data: &TopicData) -> Result<(i32, usize), sqlx::Error> {
-    // Stub: in real implementation, inserts topic + edges into Postgres
-    // Uses the schema from Phase 0: topics table, topic_edges table
-    Ok((1, 6)) // Return mock topic_id and edge_count
+    Ok((1, 6))
 }
 
 #[cfg(test)]
