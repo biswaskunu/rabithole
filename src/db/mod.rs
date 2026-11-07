@@ -181,6 +181,64 @@ pub async fn update_streak(pool: &PgPool, user_id: i32, completed_today: bool) -
     Ok((new_current, new_longest))
 }
 
+pub async fn save_map_from_daily_trail(pool: &PgPool, user_id: i32, topic_ids: &[i32]) -> Result<i32, sqlx::Error> {
+    // Check 5-map free tier limit
+    let map_count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM maps WHERE user_id = $1")
+        .bind(user_id)
+        .fetch_one(pool)
+        .await
+        .map(|(c,)| c)
+        .unwrap_or(0);
+
+    if map_count >= 5 {
+        return Err(sqlx::Error::RowNotFound);
+    }
+
+    let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let map_title = format!("Daily Trail - {}", today);
+
+    // Create map
+    let map_id: i32 = sqlx::query_scalar(
+        "INSERT INTO maps (user_id, title, created_at, is_public) VALUES ($1, $2, NOW(), FALSE) RETURNING id",
+    )
+        .bind(user_id)
+        .bind(&map_title)
+        .fetch_one(pool)
+        .await
+        .map(|id| id)
+        .unwrap_or(0);
+
+    if map_id > 0 {
+        // Add topics as map_nodes in sequence
+        for (i, &topic_id) in topic_ids.iter().enumerate() {
+            sqlx::query(
+                "INSERT INTO map_nodes (map_id, topic_id, position_x, position_y) VALUES ($1, $2, $3, $4)",
+            )
+                .bind(map_id)
+                .bind(topic_id)
+                .bind(i as f32 * 100.0)  // space nodes horizontally
+                .bind(0.0)
+                .execute(pool)
+                .await
+                .ok();
+
+            // Connect to previous topic if not first
+            if i > 0 {
+                sqlx::query(
+                    "INSERT INTO topic_edges (from_topic_id, to_topic_id, relation_type) VALUES ($1, $2, 'related')",
+                )
+                    .bind(topic_ids[i - 1])
+                    .bind(topic_id)
+                    .execute(pool)
+                    .await
+                    .ok();
+            }
+        }
+    }
+
+    Ok(map_id)
+}
+
 #[derive(Serialize)]
 pub struct DailyTrailTopic {
     pub id: i32,
