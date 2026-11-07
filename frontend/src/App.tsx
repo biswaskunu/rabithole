@@ -70,6 +70,12 @@ export default function App() {
     answers: [],
   })
 
+  const [dailyTrailIsLoading, setDailyTrailIsLoading] = useState(true)
+  const [dailyTrail, setDailyTrail] = useState({
+    error: false,
+    topics: [] as TopicData[],
+  })
+
   // Load saved maps from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('rabithole_maps')
@@ -82,6 +88,28 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('rabithole_maps', JSON.stringify(savedMaps))
   }, [savedMaps])
+
+  // Fetch daily trail on mount
+  useEffect(() => {
+    const fetchDailyTrail = async () => {
+      setDailyTrailIsLoading(true)
+      try {
+        const response = await axios.get('/api/daily-trail')
+        setDailyTrail({
+          error: false,
+          topics: response.data.topics,
+        })
+      } catch (err) {
+        setDailyTrail({
+          error: true,
+          topics: [],
+        })
+      } finally {
+        setDailyTrailIsLoading(false)
+      }
+    }
+    fetchDailyTrail()
+  }, [])
 
   // Search for topics
   const handleSearch = async (e: React.FormEvent) => {
@@ -380,6 +408,40 @@ export default function App() {
     <div style={{ minHeight: '100vh', padding: '20px' }}>
       <div style={{ marginBottom: '20px' }}>
         <h2>RabitHole - Phase 2</h2>
+
+        {/* Daily trail section - shown on app mount for returning users */}
+        <div style={{ marginBottom: '20px', padding: '12px', border: '1px solid #e5e4e7', borderRadius: '8px', background: '#f8f5f0' }}>
+          <h3>Daily Trail</h3>
+          <p>Explore 5 curated topics to build your curiosity streak</p>
+          {dailyTrailIsLoading ? (
+            <p style={{ margin: '10px 0' }}>Loading daily trail...</p>
+          ) : dailyTrail.error ? (
+            <p style={{ color: '#e53e3e', margin: '10px 0' }}>Failed to load daily trail. Try again tomorrow.</p>
+          ) : dailyTrail.topics.length === 0 ? (
+            <p style={{ margin: '10px 0' }}>No trail available at this time.</p>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px', marginTop: '12px' }}>
+              {dailyTrail.topics.map((topic) => (
+                <div
+                  key={topic.slug}
+                  style={{
+                    padding: '12px',
+                    background: '#fff',
+                    border: '1px solid #e5e4e7',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s',
+                  }}
+                  onClick={() => loadTopic(topic as TopicData)}
+                >
+                  <h4>{topic.title}</h4>
+                  <p style={{ fontSize: '12px', color: '#6b6375', margin: '4px 0' }>{topic.summary || ''}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
           <input
             type="text"
