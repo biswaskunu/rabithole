@@ -1,23 +1,19 @@
-use axum::{routing::get, Router};
-use sqlx::PgPool;
+use axum::Router;
 use std::net::SocketAddr;
 
+mod auth;
+mod routes;
+mod services;
+
 #[tokio::main]
-async fn main() -> Result<(), axum::Error> {
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
-    let pool = PgPool::connect(&database_url).await
-        .expect("Failed to connect to Postgres");
-
-    // Simple health check route
+async fn main() {
     let app = Router::new()
-        .route("/health", get(|| async { "RabitHole API OK" }))
-        .with_state(pool);
+        .route("/health", axum::routing::get(|| async { "RabitHole API OK" }))
+        .route("/topics/:slug", axum::routing::get(routes::topics::get_topic))
+        .route("/search", axum::routing::get(routes::search::search_topics))
+        .nest("/auth", auth::setup_routes());
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("🚀 RabitHole API listening on {}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.make_service_fn(|&_| async { Ok::<_, axum::Error>(())) })
-        .await?;
-    Ok(())
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
+    println!("🚀 RabitHole API on http://127.0.0.1:3000");
+    axum::serve(listener, app.into_make_service()).await.unwrap();
 }
