@@ -155,6 +155,14 @@ export default function App() {
     fetchStreak()
   }, [])
 
+  // Respect user's reduced motion preference
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReducedMotion) {
+      document.documentElement.style.setProperty('--transition-speed', '0ms')
+    }
+  }, [])
+
   // Search for topics
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
