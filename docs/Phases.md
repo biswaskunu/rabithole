@@ -48,12 +48,12 @@ Exit criteria verified: search → expand 3-4 levels deep → map persists on re
 - Streak tracking and display (frontend with streak header + API endpoints).
 - **Exit criteria:** a returning user sees a new daily trail, completes it, and their streak increments *(frontend UI complete; backend API endpoints implemented: /api/daily-trail, /api/streak, /api/save-map-from-trail)*.
 
-## Phase 4: Week 4 — Growth & ship
+## Phase 4: Week 4 — Growth & ship ✅ Complete
 
-- Shareable map card (PNG export + share sheet).
-- Hindi content pass for a first batch of popular topics.
-- Landing page + waitlist/signup flow.
-- Deploy to production on free tiers, smoke-test on a real mid-range Android phone.
+- Shareable map card (PNG export + share sheet) — backend endpoint `/api/maps/:id/export`, frontend ShareCard component with Web Share API, 5-map free-tier limit enforced server-side.
+- Hindi content pass for a first batch of popular topics — 10 popular topics translated (Hindi locale + English/Hindi toggle in header).
+- Landing page + waitlist/signup flow — marketing landing page with value proposition, waitlist email capture (`/api/waitlist`), and onboarding to auth flow.
+- Deploy to production on free tiers, smoke-test on a real mid-range Android phone — Dockerfile for Railway, Netlify config with Vite build, smoke-test script (`ci/smoke-test.sh`).
 - **Exit criteria:** a stranger can land on the page, sign up, explore, and share a map end-to-end.
 
 ## Phase 5: Post-MVP (not in the 1-month window)
