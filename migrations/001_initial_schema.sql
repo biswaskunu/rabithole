@@ -66,3 +66,33 @@ CREATE TABLE IF NOT EXISTS daily_trails (
     topic_ids INTEGER[] DEFAULT '{}'::integer[],
     generated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Recursive CTE function for topic graph traversal
+-- Finds all topics reachable from a starting topic within max_hops hops
+CREATE OR REPLACE FUNCTION get_topic_graph(start_topic_id INTEGER, max_hops INTEGER)
+RETURNS TABLE (topic_id INTEGER, topic_slug VARCHAR(255), topic_title VARCHAR(255), hop_count INTEGER) AS $$
+BEGIN
+    RETURN QUERY
+    WITH RECURSIVE graph_traversal AS (
+        -- Base case: start with the initial topic at hop 0
+        SELECT id, slug, title, 0 AS hop_count
+        FROM topics
+        WHERE id = start_topic_id
+
+        UNION ALL
+
+        -- Recursive case: find connected topics (1-hop neighbors)
+        SELECT t.id, t.slug, t.title, gt.hop_count + 1
+        FROM topics t
+        INNER JOIN topic_edges te ON t.id = te.to_topic_id
+        INNER JOIN graph_traversal gt ON te.from_topic_id = gt.topic_id
+        WHERE gt.hop_count < max_hops
+    )
+    SELECT topic_id, topic_slug, topic_title, hop_count
+    FROM graph_traversal;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Index for faster graph traversal
+CREATE INDEX IF NOT EXISTS idx_topic_edges_from ON topic_edges(from_topic_id);
+CREATE INDEX IF NOT EXISTS idx_topic_edges_to ON topic_edges(to_topic_id);
