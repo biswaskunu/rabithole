@@ -89,6 +89,8 @@ export default function App() {
     return saved ? (saved === 'hi' ? 'hi' : 'en') : 'en'
   })
 
+  const [errorShare, setErrorShare] = useState(false)
+
   const [streakCurrent, setStreakCurrent] = useState(0)
   const [streakLongest, setStreakLongest] = useState(0)
   const [lastActive, setLastActive] = useState('Never')
@@ -459,9 +461,17 @@ export default function App() {
       const fromTopic = selectedTopic.title || 'Topic'
       const toTopic = graphNodes.length > 1 ? graphNodes[graphNodes.length - 1].title : 'Topic'
       const steps = graphEdges.length + 1 // nodes + connections
+
+      // Check 5-map free tier limit
+      if (savedMaps.length >= MAX_MAPS) {
+        setErrorShare(true)
+        return
+      }
+
       setSharePayload({ fromTopic, toTopic, steps })
     } catch (err) {
       console.error('Map export error:', err)
+      setErrorShare(true)
     }
   }
 
@@ -767,6 +777,11 @@ export default function App() {
             >
               Share Map
             </button>
+          )}
+          {errorShare && (
+            <div style={{ marginTop: '8px', padding: '8px', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '4px', color: '#dc2626', fontSize: '12px' }}>
+              You've reached the 5-map free tier limit. Upgrade to save and share unlimited maps.
+            </div>
           )}
         </div>
       </div>
