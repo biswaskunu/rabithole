@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import ShareCard from './ShareCard'
 
 // Types for the graph
 type TopicData = {
@@ -80,13 +81,14 @@ export default function App() {
 
   const [streakCurrent, setStreakCurrent] = useState(0)
   const [streakLongest, setStreakLongest] = useState(0)
-  const [lastActive, setLastActive] = useState(
-  const [streakLongest, setStreakLongest] = useState(0)
-  const [lastActive, setLastActive] = useState()
+  const [lastActive, setLastActive] = useState('Never')
+  const [dailyTrailIsLoading, setDailyTrailIsLoading] = useState(true)
   const [dailyTrail, setDailyTrail] = useState({
     error: false,
     topics: [] as TopicData[],
   })
+
+  const [payload, setPayload] = useState<{ fromTopic: string; toTopic: string; steps: number } | null>(null)
 
   // Load saved maps from localStorage on mount
   useEffect(() => {
@@ -269,7 +271,7 @@ export default function App() {
     } finally {
       setDailyTrailIsLoading(false)
     }
-  }    const q = selectedTopic?.quizQuestions?.[quizState.questionIndex]
+  const q = selectedTopic?.quizQuestions?.[quizState.questionIndex]
     if (!q) return
 
     const isCorrect = optionIndex === q.correctOption
@@ -718,6 +720,11 @@ export default function App() {
           </button>
         </div>
       </div>
+
+      {/* Share card - shown after map save or daily trail complete */}
+      {payload && (
+        <ShareCard payload={payload} />
+      )}
     </div>
   )
 }
