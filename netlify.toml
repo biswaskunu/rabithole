@@ -5,3 +5,34 @@
 [plugins]
   [plugins.formacular]
   enabled = false
+
+[[redirects]]
+  from = "/api/topics/:slug"
+  to = "/api/topics/:slug"
+  status = 200
+  headers = {
+    "Cache-Control" = "public, max-age=3600, stale-while-revalidate=86400"
+  }
+
+[[redirects]]
+  from = "/api/search"
+  to = "/api/search"
+  status = 200
+  headers = {
+    "Cache-Control" = "public, max-age=300, stale-while-revalidate=600"
+  }
+
+[[redirects]]
+  from = "/api/daily-trail"
+  to = "/api/daily-trail"
+  status = 200
+  headers = {
+    "Cache-Control" = "public, max-age=900, stale-while-revalidate=1800"
+  }
+
+[header]
+  for = "/*"
+  status = "200"
+  headers = {
+    "Cache-Control" = "public, max-age=3600, stale-while-revalidate=86400"
+  }
