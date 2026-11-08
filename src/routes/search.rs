@@ -28,6 +28,7 @@ pub async fn search_topics(Query(params): Query<SearchParams>) -> Json<SearchRes
             title: "JEE Mathematics".to_string(),
             summary: "Joint Entrance Examination Mathematics".to_string(),
             links: vec!["algebra".to_string(), "calculus".to_string()],
+            lang: "en".to_string(),
         });
     }
 
@@ -38,6 +39,7 @@ pub async fn search_topics(Query(params): Query<SearchParams>) -> Json<SearchRes
             title: "Physics Mechanics".to_string(),
             summary: "Laws of motion and forces".to_string(),
             links: vec!["newton".to_string(), "kinematics".to_string()],
+            lang: "en".to_string(),
         });
     }
 
@@ -48,6 +50,7 @@ pub async fn search_topics(Query(params): Query<SearchParams>) -> Json<SearchRes
             title: "General Search".to_string(),
             summary: "No direct matches found".to_string(),
             links: vec![],
+            lang: "en".to_string(),
         });
     }
 

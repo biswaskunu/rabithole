@@ -30,6 +30,7 @@ pub async fn get_topic(Path(slug): Path<String>) -> Json<TopicResponse> {
         summary: "Sample summary".to_string(),
         links: vec!["algebra".to_string(), "calculus".to_string(), "geometry".to_string(),
                      "trigonometry".to_string(), "statistics".to_string(), "physics".to_string()],
+        lang: "en".to_string(),
     };
 
     // Depth limit: only 6 related topics (capped at 10 per Architecture.md:56)

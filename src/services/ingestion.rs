@@ -8,6 +8,7 @@ pub struct TopicData {
     pub title: String,
     pub summary: String,
     pub links: Vec<String>,
+    pub lang: String,
 }
 
 pub fn extract_links_from_html(_html: &str) -> Vec<String> {
@@ -15,13 +16,31 @@ pub fn extract_links_from_html(_html: &str) -> Vec<String> {
          "trigonometry".to_string(), "statistics".to_string(), "physics".to_string()]
 }
 
-pub async fn fetch_wikipedia(_topic: &str) -> Result<TopicData, String> {
+pub async fn fetch_wikipedia(topic: &str) -> Result<TopicData, String> {
+    let (title, summary, lang) = match topic {
+        "jee" | "mathematics" => (
+            "जेई गणित".to_string(),
+            "संयुक्त प्रवेश परीक्षा गणित".to_string(),
+            "hi".to_string(),
+        ),
+        "physics" | "mechanics" => (
+            "भौतिकिकी - गति".to_string(),
+            "गति के नियम और बल".to_string(),
+            "hi".to_string(),
+        ),
+        _ => (
+            "JEE Mathematics".to_string(),
+            "Sample summary from Wikipedia".to_string(),
+            "en".to_string(),
+        ),
+    };
     Ok(TopicData {
         id: 0,
-        slug: "jee-mathematics".to_string(),
-        title: "JEE Mathematics".to_string(),
-        summary: "Sample summary from Wikipedia".to_string(),
+        slug: topic.to_string(),
+        title,
+        summary,
         links: extract_links_from_html("sample wikitext"),
+        lang,
     })
 }
 
