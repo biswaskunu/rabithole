@@ -1,0 +1,47 @@
+{
+  "jee-mathematics": {
+    "title": "জেঈ গণিত",
+    "summary": "সংযুক্ত প্রক্রি입 পরীক্ষা গণিত",
+    "links": ["algebra", "calculus", "geometry"]
+  },
+  "physics-mechanics": {
+    "title": "ভৌতিকী - গতি",
+    "summary": "গতি 的規則 এবং বল",
+    "links": ["newton", "kinematics", "dynamics"]
+  },
+  "algebra": {
+    "title": "বীজগণিত",
+    "summary": "known এবং unknown রাশি এর মধ্যে সম্পর্ক",
+    "links": ["equations", "variables", "formulas"]
+  },
+  "calculus": {
+    "title": "গণিতের cálculo",
+    "summary": "সীমা, অবকলজ এবং ইন্টিগ্রাল",
+    "links": ["derivatives", "integrals", "limits"]
+  },
+  "geometry": {
+    "title": "জ্যামিতি",
+    "summary": "আকৃতিplaceholder এবং স্থানের untersuchung",
+    "links": ["angles", "triangles", "circles"]
+  },
+  "trigonometry": {
+    "title": "ত্রিকরণমিতি",
+    "summary": "ত্রিভুঞ্জের ও角度関係の estudo",
+    "links": ["sine", "cosine", "tangent"]
+  },
+  "statistics": {
+    "title": "সাংখ্যকীতি",
+    "summary": "ডেটা সংগ্রহ এবং বিশ্লেষণ",
+    "links": ["mean", "median", "mode"]
+  },
+  "physics": {
+    "title": "বৈজ্ঞানিক",
+    "summary": "প্রকৃতিের मूल नियम",
+    "links": ["mechanics", "thermodynamics", "electromagnetism"]
+  },
+  "general": {
+    "title": "সাধারণ",
+    "summary": "Various topic areas",
+    "links": []
+  }
+}

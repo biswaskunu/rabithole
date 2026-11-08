@@ -1,0 +1,47 @@
+{
+  "jee-mathematics": {
+    "title": "ஜீ கணிதம்",
+    "summary": "সংಯੁ triple periיקה கணிதம்",
+    "links": ["algebra", "calculus", "geometry"]
+  },
+  "physics-mechanics": {
+    "title": "பahrtikaic ishasthram",
+    "summary": "గమనం మరియు శక్తి",
+    "links": ["newton", "kinematics", "dynamics"]
+  },
+  "algebra": {
+    "title": "బీజ గణితం",
+    "summary": "బీజ గణితం సూత్రాలు agus అవగధనలు",
+    "links": ["equations", "variables", "formulas"]
+  },
+  "calculus": {
+    "title": "గణితం",
+    "summary": "సీములు, అవక derivates integrals",
+    "links": ["derivatives", "integrals", "limits"]
+  },
+  "geometry": {
+    "title": "గleitkarramba",
+    "summary": "భూమి Eigenschaften ogalleri",
+    "links": ["angles", "triangles", "circles"]
+  },
+  "trigonometry": {
+    "title": "ట్రిగోనిమెట్రి",
+    "summary": "కోణాలు మరియు trigonometric relations",
+    "links": ["sine", "cosine", "tangent"]
+  },
+  "statistics": {
+    "title": "సాంఖ్యక శాస్త్రం",
+    "summary": " డేటా संग्रह and విశ্লেষణ",
+    "links": ["mean", "median", "mode"]
+  },
+  "physics": {
+    "title": "భౌతిక శాస్త్రం",
+    "summary": "భౌతిక అంశాలు",
+    "links": ["mechanics", "thermodynamics", "electromagnetism"]
+  },
+  "general": {
+    "title": "సাধারণ",
+    "summary": "మరింత రחים విషయాలు",
+    "links": []
+  }
+}

@@ -86,8 +86,14 @@ export default function App() {
 
   const [selectedLanguage, setSelectedLanguage] = useState(() => {
     const saved = localStorage.getItem('selectedLanguage')
-    return saved ? (saved === 'hi' ? 'hi' : 'en') : 'en'
+    return saved ? (saved === 'bn' ? 'bn' : saved === 'hi' ? 'hi' : 'en') : 'en'
   })
+
+  const languageOptions = [
+    { code: 'en', label: 'English' },
+    { code: 'hi', label: 'हिंदी' },
+    { code: 'bn', label: 'বাংলা' },
+  ]
 
   const [errorShare, setErrorShare] = useState(false)
 
@@ -513,7 +519,7 @@ export default function App() {
           <span style={{ marginRight: "16px", fontWeight: "bold" }}>🔥 {streakCurrent}</span>
           <span style={{ marginRight: "16px" }}>Longest: {streakLongest}</span>
           <span style={{ fontSize: "12px", color: "#6b6375" }}>Last: {lastActive}</span>
-          <span style={{ marginLeft: "24px", fontSize: "12px", color: "#6b6375", cursor: "pointer", onClick: () => setSelectedLanguage(prev => prev === "hi" ? "en" : "hi") }}>{selectedLanguage === "hi" ? "हिंदी" : "English"} ▾</span>
+          <span style={{ marginLeft: "24px", fontSize: "12px", color: "#6b6375", cursor: "pointer", onClick: () => setSelectedLanguage(prev => prev === "bn" ? "en" : prev === "en" ? "hi" : "bn") }}>{selectedLanguage === "bn" ? "বাংলা" : selectedLanguage === "hi" ? "हिंदी" : "English"} ▾</span>
         </div>
 
 
