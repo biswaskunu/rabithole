@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import ShareCard from './ShareCard'
+import LandingPage from './LandingPage'
 
 // Types for the graph
 type TopicData = {
@@ -80,6 +81,8 @@ export default function App() {
   })
 
   const [sharePayload, setSharePayload] = useState<{ fromTopic: string; toTopic: string; steps: number } | null>(null)
+
+  const [showLanding, setShowLanding] = useState(true)
 
   const [selectedLanguage, setSelectedLanguage] = useState(() => {
     const saved = localStorage.getItem('selectedLanguage')
@@ -478,9 +481,14 @@ export default function App() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', padding: '20px' }}>
-      <div style={{ marginBottom: '20px' }}>
-        <h2>RabitHole - Phase 2</h2>
+    {showLanding ? (
+      <LandingPage
+        onJoin={() => setShowLanding(false)}
+      />
+    ) : (
+      <div style={{ minHeight: '100vh', padding: '20px' }}>
+        <div style={{ marginBottom: '20px' }}>
+          <h2>RabitHole - Phase 2</h2>
 
         {/* Streak display header */}
         <div style={{ margin: "20px 0", padding: "12px", background: "#f0f0f0", borderRadius: "8px" }}>
