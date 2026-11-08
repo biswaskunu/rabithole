@@ -1,0 +1,47 @@
+{
+  "jee-mathematics": {
+    "title": "जेई गणित",
+    "summary": "संयुक्त प्रवेश परीक्षा गणित",
+    "links": ["algebra", "calculus", "geometry"]
+  },
+  "physics-mechanics": {
+    "title": "भौतिकिकी - गति",
+    "summary": "गति के नियम और बल",
+    "links": ["newton", "kinematics", "dynamics"]
+  },
+  "algebra": {
+    "title": "बीजगणित",
+    "summary": "ज्ञात और अज्ञात राशियों के बीच संबंध",
+    "links": ["equations", "variables", "formulas"]
+  },
+  "calculus": {
+    "title": "कलन",
+    "summary": "परिवर्तन और अवकलन का अध्ययन",
+    "links": ["derivatives", "integrals", "limits"]
+  },
+  "geometry": {
+    "title": "ज्यामिति",
+    "summary": "आकृतियों और स्थानों का अध्ययन",
+    "links": ["angles", "triangles", "circles"]
+  },
+  "trigonometry": {
+    "title": "त्रिकोणमिति",
+    "summary": "त्रिभुजों और कोणीय संबंधों का अध्ययन",
+    "links": ["sine", "cosine", "tangent"]
+  },
+  "statistics": {
+    "title": "सांख्यिकी",
+    "summary": "डेटा संग्रह और विश्लेषण",
+    "links": ["mean", "median", "mode"]
+  },
+  "physics": {
+    "title": "भौतिकी",
+    "summary": "प्रकृति के मूल नियम",
+    "links": ["mechanics", "thermodynamics", "electromagnetism"]
+  },
+  "general": {
+    "title": "सामान्य",
+    "summary": "विविध विषय क्षेत्र",
+    "links": []
+  }
+}
