@@ -24,6 +24,7 @@ pub fn setup_routes() -> Router {
         .route("/maps", post(save_map))
         .route("/maps", get(list_maps))
         .route("/maps/:id", delete(delete_map))
+        .route("/maps/:id/export", get(export_map))
 }
 
 type SavedMap = {
@@ -131,4 +132,17 @@ async fn list_maps() -> (StatusCode, Json<MapListsResponse>) {
 async fn delete_map() -> StatusCode {
     // Mock: delete map successfully
     StatusCode::OK
+}
+
+async fn export_map() -> (StatusCode, String) {
+    // Mock: return SVG representation of the map for sharing
+    let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
+  <rect width="400" height="400" fill="nightsky"/>
+  <circle cx="100" cy="100" r="40" fill="amber" />
+  <circle cx="200" cy="200" r="40" fill="amber" />
+  <line x1="100" y1="100" x2="200" y2="200" stroke="white" stroke-width="2"/>
+  <text x="200" y="390" text-anchor="middle" fill="white" font-family="sans-serif" font-size="14">My RabitHole Map</text>
+</svg>"#
+    .to_string();
+    (StatusCode::OK, svg)
 }
