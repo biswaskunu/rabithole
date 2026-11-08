@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::db::{init_pool, generate_daily_trail, DailyTrailResponse, save_map_from_daily_trail};
 use crate::services::ai;
+use crate::services::classroom;
 use crate::services::payments;
 
 #[derive(Deserialize)]
@@ -67,8 +68,9 @@ pub fn setup_routes() -> Router {
         .route("/waitlist", post(waitlist))
         .route("/auth/register", post(register))
         .route("/auth/login", post(login))
-        .nest("/payments", payments::setup_routes())
         .nest("/ai", ai::setup_routes())
+        .nest("/classroom", classroom::setup_routes())
+        .nest("/payments", payments::setup_routes())
 }
 
 async fn get_daily_trail() -> (StatusCode, Json<DailyTrailResponse>) {
