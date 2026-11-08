@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::db::init_pool;
 use crate::services::ingestion::TopicData;
+use crate::services::ai::{AiExplanationRequest, AiExplanationService};
 
 #[derive(Serialize)]
 pub struct RelatedTopic {
@@ -80,4 +81,34 @@ pub async fn get_topic_quiz(Path(slug): Path<String>) -> Json<Vec<QuizQuestionRe
 pub async fn submit_topic_quiz(Path(slug): Path<String>, Json(_answer): Json<QuizAnswer>) -> StatusCode {
     // For MVP: accept any answer, track locally on frontend
     StatusCode::OK
+}
+
+#[derive(Deserialize)]
+pub struct AiExplanationPayload {
+    pub topic_slug: String,
+}
+
+pub async fn get_topic_ai_explanation(Path(slug): Path<String>) -> Result<Json<AiExplanationResponse>, StatusCode> {
+    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+
+    // Find topic by slug
+    let topic = sqlx::query_as::<_, (i32, String, String)>(
+        "SELECT id, slug, title FROM topics WHERE slug = $1",
+    )
+        .bind(&slug)
+        .fetch_optional(&pool)
+        .await
+        .map_err(|_| StatusCode::NOT_FOUND)?;
+
+    let (topic_id, topic_slug, topic_title) = topic.ok_or(StatusCode::NOT_FOUND)?;
+
+    let request = AiExplanationRequest {
+        topic_id,
+        topic_slug,
+        topic_title,
+    };
+
+    AiExplanationService::get_explanation(&pool, &request).await
+        .map(Json)
+        .map_err(|e| e)
 }

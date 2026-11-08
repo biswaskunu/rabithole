@@ -11,6 +11,7 @@ use crate::routes::topics;
 use serde::{Deserialize, Serialize};
 
 use crate::db::{init_pool, generate_daily_trail, DailyTrailResponse, save_map_from_daily_trail};
+use crate::services::ai;
 use crate::services::payments;
 
 #[derive(Deserialize)]
@@ -59,6 +60,7 @@ pub fn setup_routes() -> Router {
         .route("/topics/:slug", get(topics::get_topic))
         .route("/topics/:slug/quiz", get(topics::get_topic_quiz))
         .route("/topics/:slug/quiz/submit", post(topics::submit_topic_quiz))
+        .route("/topics/:slug/ai-explanation", get(topics::get_topic_ai_explanation))
         .route("/daily-trail", get(get_daily_trail))
         .route("/streak", get(get_streak))
         .route("/save-map-from-trail", post(save_map_from_trail))
@@ -66,6 +68,7 @@ pub fn setup_routes() -> Router {
         .route("/auth/register", post(register))
         .route("/auth/login", post(login))
         .nest("/payments", payments::setup_routes())
+        .nest("/ai", ai::setup_routes())
 }
 
 async fn get_daily_trail() -> (StatusCode, Json<DailyTrailResponse>) {
