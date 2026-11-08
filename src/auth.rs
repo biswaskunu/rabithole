@@ -24,6 +24,17 @@ pub struct LoginPayload {
     pub password: String,
 }
 
+#[derive(Deserialize)]
+pub struct WaitlistPayload {
+    pub email: String,
+}
+
+#[derive(Serialize)]
+pub struct WaitlistResponse {
+    pub success: bool,
+    pub message: String,
+}
+
 #[derive(Serialize)]
 pub struct AuthResponse {
     pub access_token: String,
@@ -50,6 +61,7 @@ pub fn setup_routes() -> Router {
         .route("/daily-trail", get(get_daily_trail))
         .route("/streak", get(get_streak))
         .route("/save-map-from-trail", post(save_map_from_trail))
+        .route("/waitlist", post(waitlist))
         .route("/auth/register", post(register))
         .route("/auth/login", post(login))
 }
@@ -127,4 +139,15 @@ async fn login(Form(_payload): Form<LoginPayload>) -> (StatusCode, Json<AuthResp
         expires_in: 3600,
     };
     (StatusCode::OK, Json(body))
+}
+
+async fn waitlist(Form(_payload): Form<WaitlistPayload>) -> (StatusCode, Json<WaitlistResponse>) {
+    let _pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+
+    // For MVP: accept any email, store for later (mock implementation)
+    let response = WaitlistResponse {
+        success: true,
+        message: "Thank you! You've been added to the waitlist.".to_string(),
+    };
+    (StatusCode::OK, Json(response))
 }
