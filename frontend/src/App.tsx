@@ -600,12 +600,12 @@ export default function App() {
         )}
 
         {selectedTopic && (
-          <div style={{ marginBottom: '24px', padding: '16px', border: '1px solid #e5e4e7', borderRadius: '8px' }}>
+          <div style={{ marginBottom: '24px', padding: '16px', border: '1px solid #e5e4e7', borderRadius: '8px', fontFamily: '"Noto Sans Hindi", "Devanagari", serif' }}>
             <h3>{selectedTopic.title}</h3>
             <p>{selectedTopic.summary || 'No summary available'}</p>
 
             {selectedTopic.quizQuestions && selectedTopic.quizQuestions.length > 0 && (
-              <div style={{ marginTop: '12px' }}>
+              <div style={{ marginTop: '12px', fontFamily: '"Noto Sans Hindi", "Devanagari", serif' }}>
                 <h4>Quiz</h4>
                 <p>{selectedTopic.quizQuestions[quizState.questionIndex].question}</p>
                 {selectedTopic.quizQuestions[quizState.questionIndex].options.map((opt, i) => (
@@ -627,6 +627,7 @@ export default function App() {
                   >
                     {opt}
                   </button>
+                ))}
                 ))}
                 {quizState.active && quizState.questionIndex < selectedTopic.quizQuestions.length - 1 && (
                   <p style={{ marginTop: '8px', fontSize: '12px', color: '#6b6375' }}>
