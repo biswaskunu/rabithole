@@ -6,6 +6,7 @@ use axum::{
 };
 use serde::Deserialize;
 
+use crate::db::init_pool;
 use crate::services::ingestion::TopicData;
 
 #[derive(Deserialize)]
@@ -17,14 +18,6 @@ pub struct MapSummary {
     pub id: String,
     pub title: String,
     pub node_count: usize,
-}
-
-pub fn setup_routes() -> Router {
-    Router::new()
-        .route("/maps", post(save_map))
-        .route("/maps", get(list_maps))
-        .route("/maps/:id", delete(delete_map))
-        .route("/maps/:id/export", get(export_map))
 }
 
 type SavedMap = {
@@ -52,11 +45,27 @@ pub struct MapsListResponse {
 }
 
 async fn save_map() -> (StatusCode, Json<MapSaveResponse>) {
-    // Mock: enforce 5-map limit
-    let current_count = 3; // mock: user has 3 maps
-    let limit = 5;
+    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
 
-    if current_count >= limit {
+    // Check user's tier and map count
+    let user_id: i32 = 1; // MVP: using user_id 1 (will be replaced with real auth)
+
+    let map_count: i64 = sqlx::query_as("SELECT COUNT(*) FROM maps WHERE user_id = $1")
+        .bind(user_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap_or((0,));
+
+    // Check tier - paid tier has unlimited maps
+    let tier: String = sqlx::query_scalar("SELECT tier FROM users WHERE id = $1")
+        .bind(user_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap_or("free".to_string());
+
+    let limit = if tier == "paid" { 0 } else { 5 };
+
+    if map_count >= limit && limit > 0 {
         return (
             StatusCode::CONFLICT,
             Json(MapSaveResponse {
@@ -73,13 +82,13 @@ async fn save_map() -> (StatusCode, Json<MapSaveResponse>) {
                         createdAt: now,
                     }
                 },
-                current_count: current_count,
+                current_count: map_count as usize,
                 limit,
             }),
         );
     }
 
-    // Mock: save the map
+    // Save the map
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
@@ -98,14 +107,31 @@ async fn save_map() -> (StatusCode, Json<MapSaveResponse>) {
         StatusCode::CREATED,
         Json(MapSaveResponse {
             map,
-            current_count: current_count + 1,
+            current_count: map_count as usize + 1,
             limit,
         }),
     )
 }
 
 async fn list_maps() -> (StatusCode, Json<MapListsResponse>) {
-    // Mock: return user's maps
+    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+
+    let user_id: i32 = 1; // MVP: using user_id 1
+
+    let map_count: i64 = sqlx::query_as("SELECT COUNT(*) FROM maps WHERE user_id = $1")
+        .bind(user_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap_or((0,));
+
+    let tier: String = sqlx::query_scalar("SELECT tier FROM users WHERE id = $1")
+        .bind(user_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap_or("free".to_string());
+
+    let limit = if tier == "paid" { 0 } else { 5 };
+
     let maps: MapList = vec![
         MapSummary {
             id: "map-1".to_string(),
@@ -123,8 +149,8 @@ async fn list_maps() -> (StatusCode, Json<MapListsResponse>) {
         StatusCode::OK,
         Json(MapListsResponse {
             maps,
-            current_count: 2,
-            limit: 5,
+            current_count: map_count as usize,
+            limit,
         }),
     )
 }
