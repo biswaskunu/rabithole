@@ -1,11 +1,13 @@
 -- Migration: 001_initial_schema
 -- Based on docs/Architecture.md Section 3 data model
 
+CREATE TYPE user_tier AS ENUM ('free', 'paid');
+
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    tier VARCHAR(20) DEFAULT 'free',
+    tier user_tier DEFAULT 'free',
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
