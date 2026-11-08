@@ -11,6 +11,7 @@ use crate::routes::topics;
 use serde::{Deserialize, Serialize};
 
 use crate::db::{init_pool, generate_daily_trail, DailyTrailResponse, save_map_from_daily_trail};
+use crate::services::payments;
 
 #[derive(Deserialize)]
 pub struct RegisterPayload {
@@ -64,6 +65,7 @@ pub fn setup_routes() -> Router {
         .route("/waitlist", post(waitlist))
         .route("/auth/register", post(register))
         .route("/auth/login", post(login))
+        .nest("/payments", payments::setup_routes())
 }
 
 async fn get_daily_trail() -> (StatusCode, Json<DailyTrailResponse>) {
