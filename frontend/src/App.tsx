@@ -81,6 +81,11 @@ export default function App() {
 
   const [sharePayload, setSharePayload] = useState<{ fromTopic: string; toTopic: string; steps: number } | null>(null)
 
+  const [selectedLanguage, setSelectedLanguage] = useState(() => {
+    const saved = localStorage.getItem('selectedLanguage')
+    return saved ? (saved === 'hi' ? 'hi' : 'en') : 'en'
+  })
+
   const [streakCurrent, setStreakCurrent] = useState(0)
   const [streakLongest, setStreakLongest] = useState(0)
   const [lastActive, setLastActive] = useState('Never')
@@ -482,6 +487,7 @@ export default function App() {
           <span style={{ marginRight: "16px", fontWeight: "bold" }}>🔥 {streakCurrent}</span>
           <span style={{ marginRight: "16px" }}>Longest: {streakLongest}</span>
           <span style={{ fontSize: "12px", color: "#6b6375" }}>Last: {lastActive}</span>
+          <span style={{ marginLeft: "24px", fontSize: "12px", color: "#6b6375", cursor: "pointer", onClick: () => setSelectedLanguage(prev => prev === "hi" ? "en" : "hi") }}>{selectedLanguage === "hi" ? "हिंदी" : "English"} ▾</span>
         </div>
 
 
