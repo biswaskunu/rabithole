@@ -79,6 +79,8 @@ export default function App() {
     topics: [] as TopicData[],
   })
 
+  const [sharePayload, setSharePayload] = useState<{ fromTopic: string; toTopic: string; steps: number } | null>(null)
+
   const [streakCurrent, setStreakCurrent] = useState(0)
   const [streakLongest, setStreakLongest] = useState(0)
   const [lastActive, setLastActive] = useState('Never')
@@ -439,6 +441,22 @@ export default function App() {
     setSavedMaps((prev) => [...prev, newMap])
   }
 
+  // Export map as SVG and show share card
+  const exportAndShareMap = async () => {
+    if (!selectedTopic) return
+    try {
+      const response = await axios.get(`/api/maps/${currentMapId}/export`)
+      const svg = response.data
+      // Extract topic titles from the graph for the share payload
+      const fromTopic = selectedTopic.title || 'Topic'
+      const toTopic = graphNodes.length > 1 ? graphNodes[graphNodes.length - 1].title : 'Topic'
+      const steps = graphEdges.length + 1 // nodes + connections
+      setSharePayload({ fromTopic, toTopic, steps })
+    } catch (err) {
+      console.error('Map export error:', err)
+    }
+  }
+
   // Load a saved map
   const loadMap = (mapId: string) => {
     const map = savedMaps.find((m) => m.id === mapId)
@@ -718,6 +736,23 @@ export default function App() {
           >
             Save current map
           </button>
+          {currentMapId && (
+            <button
+              onClick={() => exportAndShareMap()}
+              style={{
+                marginTop: '8px',
+                width: '100%',
+                padding: '8px',
+                background: '#128C7E',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              Share Map
+            </button>
+          )}
         </div>
       </div>
 
