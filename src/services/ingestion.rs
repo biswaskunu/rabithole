@@ -141,58 +141,58 @@ pub async fn fetch_wikipedia_bengali(topic: &str) -> (String, String, String) {
 pub async fn fetch_wikipedia_tamil(topic: &str) -> (String, String, String) {
     let (title, summary, lang) = match topic {
         "jee" | "mathematics" => (
-            "ஜீ ഗણితம்".to_string(),
-            "সংയੁత్త periтика గణితం".to_string(),
+            "ஜீ கணிதம்".to_string(),
+            "சேவaporation கணிதம்".to_string(),
             "ta".to_string(),
         ),
         "physics" | "mechanics" => (
-            "భౌతిక శాస్త్రం".to_string(),
-            "గమనం మరియు శక్తి".to_string(),
+            "பொருளியல்".to_string(),
+            "வெட்டி மற்றும் இயக்கம்".to_string(),
             "ta".to_string(),
         ),
         "algebra" => (
-            "బీజ గణితం".to_string(),
-            "బీజ గణితం సూత్రాలు ਅਤੇ अवగధనలు".to_string(),
+            "அ reputable".to_string(),
+            "பொருளinear இயற்றித் தolves".to_string(),
             "ta".to_string(),
         ),
         "calculus" => (
-            "గణితం".to_string(),
-            "సীములు, అవక్క derivates integrals".to_string(),
+            "அளவியல்".to_string(),
+            "அளவியல்uttle".to_string(),
             "ta".to_string(),
         ),
         "biology" => (
-            "జీవ శాస్త్రం".to_string(),
-            "జీవుల జ్ఞానం మరియు జీవిత నδוארాలు".to_string(),
+            "உயிரியல்".to_string(),
+            "உயிரியelm".to_string(),
             "ta".to_string(),
         ),
         "chemistry" => (
-            "రసాయన శాస్త్రం".to_string(),
-            "பదార्थkeiten సహuña గుణాలు".to_string(),
+            "வேலாயுதம்".to_string(),
+            "வேலாயுதிவியல்".to_string(),
             "ta".to_string(),
         ),
-"history" => (
-            "ইতিহাস".to_string(),
-            "প্রাচীন ও আধুনিক ঘটনার কাহিনী".to_string(),
+        "history" => (
+            "வரலாறு".to_string(),
+            "வரலாற்று நிகழ்வுகள்".to_string(),
             "ta".to_string(),
         ),
         "geography" => (
-            "భౌగోళిక శాస్త్రం".to_string(),
-            "భూమి Eigenschaften ogalleri".to_string(),
+            "ப tweets".to_string(),
+            "பூமியின் பண்புகள்".to_string(),
             "ta".to_string(),
         ),
         "english" => (
-            "ఇంగ్లీజీ".to_string(),
-            "ఇంగ్లీష్ భాషా Sahitya".to_string(),
+            "ஆங்கிலம்".to_string(),
+            "English language".to_string(),
             "ta".to_string(),
         ),
         "computer" => (
-            "కంప్యూటర్ శాస్త్రం".to_string(),
-            "గణনা మరియుకంప్యూటర్ వ్యవస్థ".to_string(),
+            "கணினி அறிவியல்".to_string(),
+            "கணினி நுட்பங்கள்".to_string(),
             "ta".to_string(),
         ),
         _ => (
-            "జీ గణితం".to_string(),
-            "সংయ triple periיקה గణితం".to_string(),
+            "ஜீ கணிதம்".to_string(),
+            "சேவaporation கணிதம்".to_string(),
             "ta".to_string(),
         ),
     };
