@@ -100,11 +100,6 @@ export default function App() {
   const [streakCurrent, setStreakCurrent] = useState(0)
   const [streakLongest, setStreakLongest] = useState(0)
   const [lastActive, setLastActive] = useState('Never')
-  const [dailyTrailIsLoading, setDailyTrailIsLoading] = useState(true)
-  const [dailyTrail, setDailyTrail] = useState({
-    error: false,
-    topics: [] as TopicData[],
-  })
 
   const [payload, setPayload] = useState<{ fromTopic: string; toTopic: string; steps: number } | null>(null)
 
