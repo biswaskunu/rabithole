@@ -5,7 +5,7 @@ use axum::{
     Router,
     routing::post,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::db::init_pool;
 
