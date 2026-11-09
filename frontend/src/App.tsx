@@ -297,6 +297,8 @@ export default function App() {
     } finally {
       setDailyTrailIsLoading(false)
     }
+  }
+
   const q = selectedTopic?.quizQuestions?.[quizState.questionIndex]
     if (!q) return
 
@@ -335,80 +337,6 @@ export default function App() {
     } catch (err) {
       console.error('Search error:', err)
     }
-  }
-
-  // Load a topic and its related topics to build the graph
-  const loadTopic = async (topic: TopicData) => {
-    setSelectedTopic({ ...topic, quizQuestions: [] })
-    setSearchResults([])
-    setGraphNodes([])
-    setGraphEdges([])
-
-    try {
-      const response = await axios.get(`/api/topics/${topic.slug}`)
-      const data = response.data
-
-      // Build initial graph: topic + related topics
-      const nodes: MapNode[] = [
-        {
-          id: data.topic.slug,
-          title: data.topic.title,
-          slug: data.topic.slug,
-          summary: data.topic.summary || '',
-          x: 0,
-          y: 0,
-        },
-      ]
-
-      const edges: MapEdge[] = []
-
-      // Add up to 10 related topics (depth 1)
-      const maxRelated = Math.min(data.related.length, 10)
-      for (let i = 0; i < maxRelated; i++) {
-        const related = data.related[i]
-        nodes.push({
-          id: related.slug,
-          title: related.title,
-          slug: related.slug,
-          summary: '',
-          x: 0,
-          y: 0,
-        })
-        edges.push({ source: data.topic.slug, target: related.slug })
-      }
-
-      // Position nodes in a simple layout
-      const positionedNodes = positionNodes(nodes)
-
-      setGraphNodes(positionedNodes)
-      setGraphEdges(edges)
-
-      // Update selected topic with quiz questions from API
-      setSelectedTopic({
-        ...data.topic,
-        quizQuestions: data.topic.quizQuestions || [],
-      })
-    } catch (err) {
-      console.error('Load topic error:', err)
-    }
-  }
-
-  // Position nodes around the center
-  const positionNodes = (nodes: MapNode[]): MapNode[] => {
-    const result = [...nodes]
-    if (result.length <= 1) return result
-
-    result[0].x = 0
-    result[0].y = 0
-
-    for (let i = 1; i < result.length; i++) {
-      const angle = (i / result.length) * Math.PI * 2
-      const radius = 200 * Math.sqrt(i)
-      result[i].x = Math.cos(angle) * radius
-      result[i].y = Math.sin(angle) * radius
-    }
-
-    return result
   }
 
   // Add a node to the current map (when user expands a node)
