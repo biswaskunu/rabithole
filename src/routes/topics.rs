@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::db::init_pool;
 use crate::services::ingestion::TopicData;
-use crate::services::ai::{AiExplanationRequest, AiExplanationService};
+use crate::services::ai::{AiExplanationRequest, AiExplanationService, AiExplanationResponse};
 
 #[derive(Serialize)]
 pub struct RelatedTopic {
@@ -24,14 +24,15 @@ pub struct TopicResponse {
 // Depth-limited: only return first-degree neighbors (max 1 hop)
 // Payload cap: max 10 related topics per node to keep JSON small for mobile
 pub async fn get_topic(Path(slug): Path<String>) -> Json<TopicResponse> {
-    let mock_topic = TopicData {
+    let (title, summary, lang) = crate::services::ingestion::fetch_wikipedia_hindi(&slug).await;
+    let topic_data = TopicData {
         id: 0,
         slug: slug.clone(),
-        title: format!("Topic: {}", slug),
-        summary: "Sample summary".to_string(),
+        title: title,
+        summary,
         links: vec!["algebra".to_string(), "calculus".to_string(), "geometry".to_string(),
                      "trigonometry".to_string(), "statistics".to_string(), "physics".to_string()],
-        lang: "en".to_string(),
+        lang,
     };
 
     // Depth limit: only 6 related topics (capped at 10 per Architecture.md:56)

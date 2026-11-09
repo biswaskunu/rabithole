@@ -95,8 +95,8 @@ async fn fetch_wikipedia_bengali(topic: &str) -> (String, String, String) {
             "bn".to_string(),
         ),
         "calculus" => (
-            "গণিতের cálculo".to_string(),
-            "সীমা, অবকWomenজ এবং ইন্টিগ্রাল".to_string(),
+            "গাণিতের calculus".to_string(),
+            "সীমা, অবকল এবং ইন্টিগ্রাল".to_string(),
             "bn".to_string(),
         ),
         "biology" => (
@@ -170,9 +170,9 @@ async fn fetch_wikipedia_tamil(topic: &str) -> (String, String, String) {
             "பదార्थkeiten సహuña గుణాలు".to_string(),
             "ta".to_string(),
         ),
-        "history" => (
-            "ద_itihas".to_string(),
-            "గJECT žena andato Women}}\).".to_string(),
+"history" => (
+            "ইতিহাস".to_string(),
+            "প্রাচীন ও আধুনিক ঘটনার কাহিনী".to_string(),
             "ta".to_string(),
         ),
         "geography" => (

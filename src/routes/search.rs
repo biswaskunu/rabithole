@@ -18,28 +18,30 @@ pub struct SearchResult {
 
 pub async fn search_topics(Query(params): Query<SearchParams>) -> Json<SearchResult> {
     let query = params.q.clone();
-    // Stub: return mock results matching the query
+    // Use ingestion service to get topic data
     let mut results = Vec::new();
 
     if query.to_lowercase().contains("jee") {
+        let (title, summary, lang) = crate::services::ingestion::fetch_wikipedia_hindi("jee").await;
         results.push(TopicData {
             id: 0,
             slug: "jee-mathematics".to_string(),
-            title: "JEE Mathematics".to_string(),
-            summary: "Joint Entrance Examination Mathematics".to_string(),
-            links: vec!["algebra".to_string(), "calculus".to_string()],
-            lang: "en".to_string(),
+            title,
+            summary,
+            links: crate::services::ingestion::extract_links_from_html(""),
+            lang,
         });
     }
 
     if query.to_lowercase().contains("physics") {
+        let (title, summary, lang) = crate::services::ingestion::fetch_wikipedia_hindi("physics").await;
         results.push(TopicData {
             id: 0,
             slug: "physics-mechanics".to_string(),
-            title: "Physics Mechanics".to_string(),
-            summary: "Laws of motion and forces".to_string(),
-            links: vec!["newton".to_string(), "kinematics".to_string()],
-            lang: "en".to_string(),
+            title,
+            summary,
+            links: crate::services::ingestion::extract_links_from_html(""),
+            lang,
         });
     }
 
