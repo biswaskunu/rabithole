@@ -239,6 +239,25 @@ pub async fn save_map_from_daily_trail(pool: &PgPool, user_id: i32, topic_ids: &
     Ok(map_id)
 }
 
+pub async fn find_related_topics(pool: &sqlx::PgPool, from_topic_id: i32, hops: i32) -> Result<Vec<i32>, sqlx::Error> {
+    let topic_ids: Vec<i32> = sqlx::query_as(
+        "WITH RECURSIVE traversal AS (
+            SELECT to_topic_id AS id FROM topic_edges WHERE from_topic_id = $1
+            UNION ALL
+            SELECT te.to_topic_id FROM topic_edges te JOIN traversal t ON te.from_topic_id = t.id
+            WHERE t.hops < $2
+        )
+        SELECT DISTINCT id FROM traversal",
+    )
+        .bind(from_topic_id)
+        .bind(hops)
+        .fetch_all(pool)
+        .await
+        .unwrap_or_default();
+
+    Ok(topic_ids)
+}
+
 #[derive(Serialize, sqlx::FromRow)]
 pub struct DailyTrailTopic {
     pub id: i32,
