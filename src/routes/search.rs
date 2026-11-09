@@ -1,5 +1,6 @@
 use axum::extract::Query;
 use axum::Json;
+use axum::http::StatusCode;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -16,7 +17,7 @@ pub struct SearchResult {
     pub results: Vec<TopicData>,
 }
 
-pub async fn search_topics(Query(params): Query<SearchParams>) -> Json<SearchResult> {
+pub async fn search_topics(Query(params): Query<SearchParams>) -> (StatusCode, Json<SearchResult>) {
     let query = params.q.clone();
     // Use ingestion service to get topic data
     let mut results = Vec::new();
@@ -56,5 +57,6 @@ pub async fn search_topics(Query(params): Query<SearchParams>) -> Json<SearchRes
         });
     }
 
-    Json(SearchResult { query, results })
+    let response = SearchResult { query, results };
+    (StatusCode::OK, Json(response))
 }

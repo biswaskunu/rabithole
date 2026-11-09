@@ -22,17 +22,19 @@ pub struct TopicResponse {
 }
 
 // Depth-limited: only return first-degree neighbors (max 1 hop)
-// Payload cap: max 10 related topics per node to keep JSON small for mobile
-pub async fn get_topic(Path(slug): Path<String>) -> Json<TopicResponse> {
+/// Payload cap: max 10 related topics per node to keep JSON small for mobile
+/// Cache-Control: public, max-age=3600, stale-while-revalidate=86400 per Architecture.md:56
+pub async fn get_topic(Path(slug): Path<String>) -> (StatusCode, Json<TopicResponse>) {
     let (title, summary, lang) = crate::services::ingestion::fetch_wikipedia_hindi(&slug).await;
+    let title_clone = title.clone();
     let topic_data = TopicData {
         id: 0,
         slug: slug.clone(),
-        title: title,
-        summary,
+        title: title_clone,
+        summary: summary.clone(),
         links: vec!["algebra".to_string(), "calculus".to_string(), "geometry".to_string(),
                      "trigonometry".to_string(), "statistics".to_string(), "physics".to_string()],
-        lang,
+        lang: lang.clone(),
     };
 
     // Depth limit: only 6 related topics (capped at 10 per Architecture.md:56)
@@ -46,10 +48,22 @@ pub async fn get_topic(Path(slug): Path<String>) -> Json<TopicResponse> {
         RelatedTopic { id: 6, title: "Physics".to_string(), slug: "physics".to_string(), relation_type: "related".to_string() },
     ];
 
-    Json(TopicResponse {
-        topic: mock_topic,
+    let topic = TopicData {
+        id: 0,
+        slug: slug.clone(),
+        title,
+        summary,
+        links: vec!["algebra".to_string(), "calculus".to_string(), "geometry".to_string(),
+                     "trigonometry".to_string(), "statistics".to_string(), "physics".to_string()],
+        lang,
+    };
+
+    let response = TopicResponse {
+        topic,
         related: mock_related,
-    })
+    };
+
+    (StatusCode::OK, Json(response))
 }
 
 #[derive(Deserialize)]

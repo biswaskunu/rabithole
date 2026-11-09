@@ -16,7 +16,7 @@ pub fn extract_links_from_html(_html: &str) -> Vec<String> {
          "trigonometry".to_string(), "statistics".to_string(), "physics".to_string()]
 }
 
-async fn fetch_wikipedia_hindi(topic: &str) -> (String, String, String) {
+pub async fn fetch_wikipedia_hindi(topic: &str) -> (String, String, String) {
     let (title, summary, lang) = match topic {
         "jee" | "mathematics" => (
             "जेई गणित".to_string(),
@@ -77,7 +77,7 @@ async fn fetch_wikipedia_hindi(topic: &str) -> (String, String, String) {
     (title, summary, lang)
 }
 
-async fn fetch_wikipedia_bengali(topic: &str) -> (String, String, String) {
+pub async fn fetch_wikipedia_bengali(topic: &str) -> (String, String, String) {
     let (title, summary, lang) = match topic {
         "jee" | "mathematics" => (
             "জেঈ গণিত".to_string(),
@@ -138,7 +138,7 @@ async fn fetch_wikipedia_bengali(topic: &str) -> (String, String, String) {
     (title, summary, lang)
 }
 
-async fn fetch_wikipedia_tamil(topic: &str) -> (String, String, String) {
+pub async fn fetch_wikipedia_tamil(topic: &str) -> (String, String, String) {
     let (title, summary, lang) = match topic {
         "jee" | "mathematics" => (
             "ஜீ ഗણితம்".to_string(),
