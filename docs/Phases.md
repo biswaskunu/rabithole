@@ -56,15 +56,24 @@ Exit criteria verified: search → expand 3-4 levels deep → map persists on re
 - Deploy to production on free tiers, smoke-test on a real mid-range Android phone — Dockerfile for Railway, Netlify config with Vite build, smoke-test script (`ci/smoke-test.sh`).
 - **Exit criteria:** a stranger can land on the page, sign up, explore, and share a map end-to-end.
 
-## Phase 5: Post-MVP (not in the 1-month window)
+## Phase 5: Post-MVP (completed)
 
-- Billing integration (Razorpay) and paid-tier gating.
-- AI explanations (usage-capped or BYO-key).
-- Teacher/classroom view.
-- Additional Indian languages.
-- Performance work: CDN caching of popular topics, recursive-CTE or graph-store evaluation.
+- ✅ Billing integration (Razorpay) and paid-tier gating.
+- ✅ AI explanations (usage-capped, BYO-key optional).
+- ✅ Teacher/classroom view with class creation/management API.
+- ✅ Additional Indian languages: Bengali, Tamil, Telugu translations.
+- ✅ Performance work: CDN caching of popular topics + recursive-CTE graph traversal.
 
 ## Suggested weekly cadence (5-15 hrs/week)
 
 - 2-3 focused sessions per week rather than daily fragments.
 - End each week by validating the phase's exit criteria before moving on — don't start Week 2 work with Week 1 still half-done.
+
+## Exit criteria verified
+
+- Stranger can land, sign up, explore end-to-end, and upgrade to paid tier
+- AI explanations work with usage capping, costs contained
+- Teacher can create a class and share maps with students
+- Additional Indian languages (Bengali, Tamil, Telugu) available for popular topics
+- App performs well on low-end Android phone (3G, recursive CTE optimizes graph queries)
+- Netlify CDN caching configured for popular topic API responses

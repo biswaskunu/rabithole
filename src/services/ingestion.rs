@@ -292,10 +292,49 @@ pub async fn save_topic(pool: &sqlx::PgPool, data: &TopicData) -> Result<(i32, u
     }
 
     Ok((data.id as i32, question_count + data.links.len()))
+
 }
 
-#[test]
+#[tokio::test]
+async 
 fn test_extract_links_returns_minimum() {
     let links = extract_links_from_html("<html><p>...</p></html>");
     assert!(links.len() >= 3);
+}
+
+#[tokio::test]
+async 
+fn test_fetch_wikipedia_hindi_jee() {
+    let (title, summary, lang) = fetch_wikipedia_hindi("jee").await;
+    assert_eq!(title, "जेई गणित");
+    assert_eq!(summary, "संयुक्त प्रवेश परीक्षा गणित");
+    assert_eq!(lang, "hi");
+}
+
+#[tokio::test]
+async 
+fn test_fetch_wikipedia_hindi_physics() {
+    let (title, summary, lang) = fetch_wikipedia_hindi("physics").await;
+    assert_eq!(title, "भौतिकिकी - गति");
+    assert_eq!(summary, "गति के नियम और बल");
+    assert_eq!(lang, "hi");
+}
+
+#[tokio::test]
+async 
+fn test_fetch_wikipedia_bengali_jee() {
+    let (title, summary, lang) = fetch_wikipedia_bengali("jee").await;
+    assert_eq!(title, "জেঈ গণিত");
+    assert_eq!(summary, "সংযুক্ত প্রkti입 নিরীক্ষা গণিত");
+    assert_eq!(lang, "bn");
+}
+
+#[tokio::test]
+async 
+fn test_fetch_wikipedia_tamil_physics() {
+    let (title, summary, lang) = fetch_wikipedia_tamil("physics").await;
+    assert_eq!(lang, "ta");
+    // Just verify it returns correct tuple structure
+    assert!(!title.is_empty());
+    assert!(!summary.is_empty());
 }

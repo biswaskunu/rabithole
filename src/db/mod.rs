@@ -2,9 +2,7 @@ use sqlx::{PgPool, Row};
 use serde::Serialize;
 
 pub async fn init_pool(database_url: &str) -> Result<PgPool, sqlx::Error> {
-    // Use database URL with search_path=public to ensure tables are found
     let pool = sqlx::PgPool::connect(database_url).await?;
-    // Ensure streaks row exists for new users
     sqlx::query(
         "INSERT INTO streaks (user_id, current_streak, longest_streak, last_active_date) SELECT 0, 0, 0, CURRENT_DATE WHERE NOT EXISTS (SELECT 1 FROM streaks LIMIT 1)",
     )
@@ -21,10 +19,22 @@ pub async fn health_check(pool: &PgPool) -> bool {
         .is_ok()
 }
 
+pub struct DailyTrailTopic {
+    pub id: i32,
+    pub slug: String,
+    pub title: String,
+    pub summary: String,
+}
+
+pub struct DailyTrailResponse {
+    pub date: String,
+    pub topic_ids: Vec<i32>,
+    pub topics: Vec<DailyTrailTopic>,
+}
+
 pub async fn generate_daily_trail(pool: &PgPool, user_id: i32) -> Result<DailyTrailResponse, sqlx::Error> {
-    // Check if today's trail already exists
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
-    
+
     let existing = sqlx::query(
         "SELECT date, topic_ids FROM daily_trails WHERE date = $1",
     )
@@ -37,8 +47,6 @@ pub async fn generate_daily_trail(pool: &PgPool, user_id: i32) -> Result<DailyTr
     let topic_ids: Vec<i32> = if let Some(ref row) = existing {
         row.get::<Vec<i32>, _>("topic_ids")
     } else {
-        // Pick 5 topics: prioritize topics user hasn't seen recently,
-        // mix of familiar and new, based on topic_edges connectivity
         let all_topics: Vec<(i32, String, String)> = sqlx::query_as(
             "SELECT id, slug, title FROM topics ORDER BY random() LIMIT 50",
         )
@@ -46,7 +54,6 @@ pub async fn generate_daily_trail(pool: &PgPool, user_id: i32) -> Result<DailyTr
             .await
             .unwrap_or_default();
 
-        // Simple algorithm: pick 5 random topics, ensure variety
         let mut selected: Vec<i32> = Vec::new();
         let mut seen: std::collections::HashSet<i32> = std::collections::HashSet::new();
 
@@ -60,14 +67,12 @@ pub async fn generate_daily_trail(pool: &PgPool, user_id: i32) -> Result<DailyTr
             }
         }
         if selected.len() < 5 {
-            // Fallback: just take first 5
             all_topics.iter().take(5).map(|t| t.0).collect()
         } else {
             selected
         }
     };
 
-    // Insert or update today's trail
     if existing.is_some() {
         sqlx::query(
             "UPDATE daily_trails SET topic_ids = $1::integer[], generated_at = NOW() WHERE date = $2",
@@ -88,7 +93,6 @@ pub async fn generate_daily_trail(pool: &PgPool, user_id: i32) -> Result<DailyTr
             .ok();
     }
 
-    // Fetch topic details for response
     let topics: Vec<DailyTrailTopic> = if topic_ids.is_empty() {
         Vec::new()
     } else {
@@ -121,7 +125,6 @@ pub async fn generate_daily_trail(pool: &PgPool, user_id: i32) -> Result<DailyTr
 pub async fn update_streak(pool: &PgPool, user_id: i32, completed_today: bool) -> Result<(i32, i32), sqlx::Error> {
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
 
-    // Get current streak state
     let streak: (i32, i32, Option<String>) = sqlx::query_as(
         "SELECT current_streak, longest_streak, last_active_date FROM streaks WHERE user_id = $1",
     )
@@ -135,17 +138,13 @@ pub async fn update_streak(pool: &PgPool, user_id: i32, completed_today: bool) -
 
     let (new_current, new_longest) = if let Some(last_date) = last_active {
         if last_date == today {
-            // User was active today, increment streak
             (current_streak + 1, longest_streak.max(current_streak + 1))
         } else if !completed_today {
-            // User missed a day, reset streak
             (0, longest_streak)
         } else {
-            // User completed yesterday but not today yet (edge case)
             (current_streak + 1, longest_streak.max(current_streak + 1))
         }
     } else {
-        // First time, set to 1 if completed_today
         if completed_today {
             (1, 1)
         } else {
@@ -153,7 +152,6 @@ pub async fn update_streak(pool: &PgPool, user_id: i32, completed_today: bool) -
         }
     };
 
-    // Update streaks table
     sqlx::query(
         "UPDATE streaks SET current_streak = $1, longest_streak = $2, last_active_date = $3 WHERE user_id = $4",
     )
@@ -165,7 +163,6 @@ pub async fn update_streak(pool: &PgPool, user_id: i32, completed_today: bool) -
         .await
         .ok();
 
-    // Ensure row exists
     sqlx::query(
         "INSERT INTO streaks (user_id, current_streak, longest_streak, last_active_date) SELECT $1, $2, $3, $4 WHERE NOT EXISTS (SELECT 1 FROM streaks WHERE user_id = $5)",
     )
@@ -182,7 +179,6 @@ pub async fn update_streak(pool: &PgPool, user_id: i32, completed_today: bool) -
 }
 
 pub async fn save_map_from_daily_trail(pool: &PgPool, user_id: i32, topic_ids: &[i32]) -> Result<i32, sqlx::Error> {
-    // Check 5-map free tier limit
     let map_count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM maps WHERE user_id = $1")
         .bind(user_id)
         .fetch_one(pool)
@@ -197,7 +193,6 @@ pub async fn save_map_from_daily_trail(pool: &PgPool, user_id: i32, topic_ids: &
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
     let map_title = format!("Daily Trail - {}", today);
 
-    // Create map
     let map_id: i32 = sqlx::query_scalar(
         "INSERT INTO maps (user_id, title, created_at, is_public) VALUES ($1, $2, NOW(), FALSE) RETURNING id",
     )
@@ -209,20 +204,18 @@ pub async fn save_map_from_daily_trail(pool: &PgPool, user_id: i32, topic_ids: &
         .unwrap_or(0);
 
     if map_id > 0 {
-        // Add topics as map_nodes in sequence
         for (i, &topic_id) in topic_ids.iter().enumerate() {
             sqlx::query(
                 "INSERT INTO map_nodes (map_id, topic_id, position_x, position_y) VALUES ($1, $2, $3, $4)",
             )
                 .bind(map_id)
                 .bind(topic_id)
-                .bind(i as f32 * 100.0)  // space nodes horizontally
+                .bind(i as f32 * 100.0)
                 .bind(0.0)
                 .execute(pool)
                 .await
                 .ok();
 
-            // Connect to previous topic if not first
             if i > 0 {
                 sqlx::query(
                     "INSERT INTO topic_edges (from_topic_id, to_topic_id, relation_type) VALUES ($1, $2, 'related')",
@@ -239,25 +232,6 @@ pub async fn save_map_from_daily_trail(pool: &PgPool, user_id: i32, topic_ids: &
     Ok(map_id)
 }
 
-pub async fn find_related_topics(pool: &sqlx::PgPool, from_topic_id: i32, hops: i32) -> Result<Vec<i32>, sqlx::Error> {
-    let topic_ids: Vec<i32> = sqlx::query_as(
-        "WITH RECURSIVE traversal AS (
-            SELECT to_topic_id AS id FROM topic_edges WHERE from_topic_id = $1
-            UNION ALL
-            SELECT te.to_topic_id FROM topic_edges te JOIN traversal t ON te.from_topic_id = t.id
-            WHERE t.hops < $2
-        )
-        SELECT DISTINCT id FROM traversal",
-    )
-        .bind(from_topic_id)
-        .bind(hops)
-        .fetch_all(pool)
-        .await
-        .unwrap_or_default();
-
-    Ok(topic_ids)
-}
-
 #[derive(Serialize, sqlx::FromRow)]
 pub struct DailyTrailTopic {
     pub id: i32,
@@ -271,4 +245,47 @@ pub struct DailyTrailResponse {
     pub date: String,
     pub topic_ids: Vec<i32>,
     pub topics: Vec<DailyTrailTopic>,
+}
+
+pub async fn find_related_topics(pool: &PgPool, from_topic_id: i32, hops: i32) -> Result<Vec<i32>, sqlx::Error> {
+    let rows = sqlx::query(
+        "WITH RECURSIVE traversal AS (
+            SELECT to_topic_id AS id FROM topic_edges WHERE from_topic_id = $1
+            UNION ALL
+            SELECT te.to_topic_id FROM topic_edges te JOIN traversal t ON te.from_topic_id = t.id
+            WHERE t.hops < $2
+        )
+        SELECT DISTINCT id FROM traversal",
+    )
+        .bind(from_topic_id)
+        .bind(hops)
+        .fetch_all(pool)
+        .await?;
+
+    let topic_ids: Vec<i32> = rows.into_iter().map(|row| row.get::<i32, _>("id")).collect();
+    Ok(topic_ids)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sqlx::PgPool;
+
+    #[tokio::test]
+    async fn test_find_related_topics_requires_hops() {
+        let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public")
+            .await
+            .expect("Failed to create pool");
+        let result = find_related_topics(&pool, 1, 2).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_init_pool_creates_connection() {
+        let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public")
+            .await
+            .expect("Failed to create pool");
+        let healthy = health_check(&pool).await;
+        assert!(healthy);
+    }
 }

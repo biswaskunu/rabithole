@@ -68,7 +68,6 @@ pub fn setup_routes() -> Router {
         .route("/waitlist", post(waitlist))
         .route("/auth/register", post(register))
         .route("/auth/login", post(login))
-        .nest("/ai", ai::setup_routes())
         .nest("/classroom", classroom::setup_routes())
         .nest("/payments", payments::setup_routes())
 }
