@@ -164,6 +164,90 @@ export default function App() {
     }
   }, [])
 
+  // Initialize force-directed D3 graph
+  useEffect(() => {
+    if (graphNodes.length === 0 || graphEdges.length === 0) return
+
+    const svg = d3.select('#d3-graph')
+      .attr('width', parseInt($('#graph-area').css('min-width')))
+      .attr('height', 400)
+
+    const simulation = d3.forceSimulation(graphNodes)
+      .force('link', d3.forceLink(graphEdges).id((d: any) => d.id))
+      .force('charge', d3.forceManyBody().strength(-100))
+      .force('center', d3.forceCenter().x(0).y(0))
+      .force('collide', d3.forceCollide().radius((d: any) => 50))
+
+    const link = svg.append('g')
+      .attr('class', 'links')
+      .selectAll('line')
+      .data(graphEdges)
+      .enter()
+      .append('line')
+      .style('stroke', '#aaa')
+      .style('stroke-width', 1)
+
+    const node = svg.append('g')
+      .attr('class', 'nodes')
+      .selectAll('circle')
+      .data(graphNodes)
+      .enter()
+      .append('circle')
+      .attr('r', 20)
+      .style('fill', '#3b82f6')
+      .style('stroke', 'white')
+      .style('stroke-width', 2)
+
+    const label = svg.append('g')
+      .attr('class', 'labels')
+      .selectAll('text')
+      .data(graphNodes)
+      .enter()
+      .append('text')
+      .text((d: any) => d.title)
+      .style('font-size', '10px')
+      .style('fill', '#fff')
+      .style('pointer-events', 'none')
+
+    const drag = d3.drag<any>()
+      .on('start', (event: any, d: any) => {
+        if (!event.active) simulation.alphaTarget(1) = 0
+        d.fx = d.x
+        d.fy = d.y
+      })
+      .on('drag', (event: any, d: any) => {
+        d.fx = event.x
+        d.fy = event.y
+      })
+      .on('end', (event: any, d: any) => {
+        if (!event.active) simulation.alphaTarget(0)
+        d.fx = null
+        d.fy = null
+      })
+
+    node.call(drag)
+
+    simulation.nodes(graphNodes)
+    simulation.force('link').links(graphEdges)
+
+    simulation.on('tick', () => {
+      link.attr('x1', (d: any) => d.source.x)
+          .attr('y1', (d: any) => d.source.y)
+          .attr('x2', (d: any) => d.target.x)
+          .attr('y2', (d: any) => d.target.y)
+
+      node.attr('cx', (d: any) => d.x)
+          .attr('cy', (d: any) => d.y)
+
+      label.attr('x', (d: any) => d.x + 5)
+          .attr('y', (d: any) => d.y + 5)
+    })
+
+    return () => {
+      simulation.stop()
+    }
+  }, [graphNodes, graphEdges])
+
   // Search for topics
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
