@@ -24,6 +24,8 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
+        with:
+          package_json_file: frontend/package.json
 
       - name: Backend dependencies and build
         working-directory: .
