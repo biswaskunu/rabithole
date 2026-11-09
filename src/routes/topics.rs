@@ -136,7 +136,10 @@ pub async fn get_topic_ai_explanation(Path(slug): Path<String>) -> Result<Json<A
         topic_title,
     };
 
-    AiExplanationService::get_explanation(&pool, &request).await
+    // MVP: using user_id 1 (will be replaced with real auth)
+    let user_id: i32 = 1;
+
+    AiExplanationService::get_explanation(&pool, &request, user_id).await
         .map(Json)
         .map_err(|e| e)
 }

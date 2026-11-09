@@ -1,3 +1,4 @@
+use axum::http::StatusCode;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -32,9 +33,9 @@ impl AiExplanationService {
     pub async fn get_explanation(
         pool: &sqlx::PgPool,
         request: &AiExplanationRequest,
+        user_id: i32,
     ) -> Result<AiExplanationResponse, StatusCode> {
         // Check user's tier and usage limits
-        let user_id: i32 = 1; // MVP: using user_id 1 (will be replaced with real auth)
 
         let tier: String = sqlx::query_scalar("SELECT tier FROM users WHERE id = $1")
             .bind(user_id)
@@ -58,7 +59,7 @@ impl AiExplanationService {
             .bind(&today)
             .fetch_one(pool)
             .await
-            .unwrap_or((0,));
+            .unwrap_or(0);
 
         if !is_unlimited && total_used >= tier_limit {
             return Err(StatusCode::TOO_MANY_REQUESTS);
@@ -96,9 +97,9 @@ impl AiExplanationService {
 
     pub async fn get_usage(
         pool: &sqlx::PgPool,
+        user_id: i32,
     ) -> Result<AiUsageResponse, StatusCode> {
-        let user_id: i32 = 1; // MVP: using user_id 1
-
+        // Check user's tier and usage limits
         let tier: String = sqlx::query_scalar("SELECT tier FROM users WHERE id = $1")
             .bind(user_id)
             .fetch_one(pool)
@@ -113,7 +114,7 @@ impl AiExplanationService {
             .bind(&today)
             .fetch_one(pool)
             .await
-            .unwrap_or((0,));
+            .unwrap_or(0);
 
         let (tier_limit, is_unlimited) = if tier == "paid" {
             (-1, true)
