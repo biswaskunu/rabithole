@@ -179,14 +179,15 @@ export default function App() {
   }
 
   // Load a topic and its related topics to build the graph
-  const loadTopic = async (topic: TopicData) => {
+  const loadTopic = async (topic: TopicData, lang?: string) => {
+    const langParam = lang ? `?lang=${lang}` : ''
     setSelectedTopic({ ...topic, quizQuestions: [] })
     setSearchResults([])
     setGraphNodes([])
     setGraphEdges([])
 
     try {
-      const response = await axios.get(`/api/topics/${topic.slug}`)
+      const response = await axios.get(`/api/topics/${topic.slug}${langParam}`)
       const data = response.data
 
       // Build initial graph: topic + related topics
@@ -469,7 +470,7 @@ export default function App() {
                     cursor: 'pointer',
                     transition: 'background 0.2s',
                   }}
-                  onClick={() => loadTopic(topic as TopicData)}
+                  onClick={() => loadTopic(topic as TopicData, selectedLanguage)}
                 >
                   <h4>{topic.title}</h4>
                   <p style={{ fontSize: '12px', color: '#6b6375', margin: '4px 0' }}{' '}{topic.summary || ''}</p>
@@ -544,7 +545,7 @@ export default function App() {
               {searchResults.map((result) => (
                 <li
                   key={result.slug}
-                  onClick={() => loadTopic(result)}
+                  onClick={() => loadTopic(result, selectedLanguage)}
                   style={{ cursor: 'pointer', margin: '4px 0', padding: '8px', border: '1px solid #e5e4e7', borderRadius: '4px' }}
                 >
                   {result.title}
@@ -598,7 +599,7 @@ export default function App() {
             )}
 
             <button
-              onClick={() => loadTopic(selectedTopic)}
+              onClick={() => loadTopic(selectedTopic, selectedLanguage)}
               style={{
                 marginTop: '8px',
                 padding: '6px 12px',
