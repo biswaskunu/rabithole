@@ -702,8 +702,8 @@ export default function App() {
         <div
           id="graph-area"
           style={{
-            minHeight: '400px',
-            minWidth: '600px',
+            minHeight: 'calc(100vh - 200px)',
+            minWidth: '100%',
             border: '2px solid #e5e4e7',
             borderRadius: '8px',
             position: 'relative',
