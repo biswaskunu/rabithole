@@ -35,6 +35,7 @@ pub async fn get_topic(Query(params): Query<LangParam>, Path(slug): Path<String>
     };
 
     let title_clone = title.clone();
+    let language_clone = language.clone();
     let topic_data = TopicData {
         id: 0,
         slug: slug.clone(),
@@ -42,7 +43,7 @@ pub async fn get_topic(Query(params): Query<LangParam>, Path(slug): Path<String>
         summary: summary.clone(),
         links: vec!["algebra".to_string(), "calculus".to_string(), "geometry".to_string(),
                      "trigonometry".to_string(), "statistics".to_string(), "physics".to_string()],
-        lang: language,
+        lang: language_clone.clone(),
     };
 
     // Depth limit: only 6 related topics (capped at 10 per Architecture.md:56)
@@ -63,7 +64,7 @@ pub async fn get_topic(Query(params): Query<LangParam>, Path(slug): Path<String>
         summary,
         links: vec!["algebra".to_string(), "calculus".to_string(), "geometry".to_string(),
                      "trigonometry".to_string(), "statistics".to_string(), "physics".to_string()],
-        lang: language,
+        lang: language_clone.clone(),
     };
 
     let response = TopicResponse {
@@ -75,7 +76,7 @@ pub async fn get_topic(Query(params): Query<LangParam>, Path(slug): Path<String>
 }
 
 #[derive(Deserialize)]
-struct LangParam {
+pub struct LangParam {
     lang: Option<String>,
 }
 

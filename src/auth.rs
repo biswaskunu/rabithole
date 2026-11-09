@@ -72,6 +72,7 @@ pub fn setup_routes() -> Router {
         .nest("/payments", payments::setup_routes())
 }
 
+#[axum::debug_handler]
 async fn get_daily_trail() -> (StatusCode, Json<DailyTrailResponse>) {
     let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
     // Use user_id 1 for MVP (will be replaced with real user auth later)

@@ -19,6 +19,7 @@ pub async fn health_check(pool: &PgPool) -> bool {
         .is_ok()
 }
 
+#[derive(Serialize, sqlx::FromRow)]
 pub struct DailyTrailTopic {
     pub id: i32,
     pub slug: String,
@@ -26,6 +27,7 @@ pub struct DailyTrailTopic {
     pub summary: String,
 }
 
+#[derive(Serialize)]
 pub struct DailyTrailResponse {
     pub date: String,
     pub topic_ids: Vec<i32>,
@@ -230,21 +232,6 @@ pub async fn save_map_from_daily_trail(pool: &PgPool, user_id: i32, topic_ids: &
     }
 
     Ok(map_id)
-}
-
-#[derive(Serialize, sqlx::FromRow)]
-pub struct DailyTrailTopic {
-    pub id: i32,
-    pub slug: String,
-    pub title: String,
-    pub summary: String,
-}
-
-#[derive(Serialize)]
-pub struct DailyTrailResponse {
-    pub date: String,
-    pub topic_ids: Vec<i32>,
-    pub topics: Vec<DailyTrailTopic>,
 }
 
 pub async fn find_related_topics(pool: &PgPool, from_topic_id: i32, hops: i32) -> Result<Vec<i32>, sqlx::Error> {
