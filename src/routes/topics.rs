@@ -1,10 +1,11 @@
 use axum::extract::Path;
+use axum::extract::Query;
 use axum::Json;
 use axum::http::StatusCode;
 use serde::{Deserialize, Serialize};
 
 use crate::db::init_pool;
-use crate::services::ingestion::TopicData;
+use crate::services::ingestion::{TopicData, fetch_wikipedia_hindi, fetch_wikipedia_bengali, fetch_wikipedia_tamil};
 use crate::services::ai::{AiExplanationRequest, AiExplanationService, AiExplanationResponse};
 
 #[derive(Serialize)]
@@ -22,10 +23,17 @@ pub struct TopicResponse {
 }
 
 // Depth-limited: only return first-degree neighbors (max 1 hop)
-/// Payload cap: max 10 related topics per node to keep JSON small for mobile
-/// Cache-Control: public, max-age=3600, stale-while-revalidate=86400 per Architecture.md:56
-pub async fn get_topic(Path(slug): Path<String>) -> (StatusCode, Json<TopicResponse>) {
-    let (title, summary, lang) = crate::services::ingestion::fetch_wikipedia_hindi(&slug).await;
+// Payload cap: max 10 related topics per node to keep JSON small for mobile
+// Cache-Control: public, max-age=3600, stale-while-revalidate=86400 per Architecture.md:56
+pub async fn get_topic(Query(params): Query<LangParam>, Path(slug): Path<String>) -> (StatusCode, Json<TopicResponse>) {
+    let lang = params.lang.unwrap_or_else(|| "en".to_string());
+    let (title, summary, language) = match lang.as_str() {
+        "hi" => crate::services::ingestion::fetch_wikipedia_hindi(&slug).await,
+        "bn" => crate::services::ingestion::fetch_wikipedia_bengali(&slug).await,
+        "ta" => crate::services::ingestion::fetch_wikipedia_tamil(&slug).await,
+        _ => crate::services::ingestion::fetch_wikipedia_hindi(&slug).await,
+    };
+
     let title_clone = title.clone();
     let topic_data = TopicData {
         id: 0,
@@ -34,7 +42,7 @@ pub async fn get_topic(Path(slug): Path<String>) -> (StatusCode, Json<TopicRespo
         summary: summary.clone(),
         links: vec!["algebra".to_string(), "calculus".to_string(), "geometry".to_string(),
                      "trigonometry".to_string(), "statistics".to_string(), "physics".to_string()],
-        lang: lang.clone(),
+        lang: language,
     };
 
     // Depth limit: only 6 related topics (capped at 10 per Architecture.md:56)
@@ -55,7 +63,7 @@ pub async fn get_topic(Path(slug): Path<String>) -> (StatusCode, Json<TopicRespo
         summary,
         links: vec!["algebra".to_string(), "calculus".to_string(), "geometry".to_string(),
                      "trigonometry".to_string(), "statistics".to_string(), "physics".to_string()],
-        lang,
+        lang: language,
     };
 
     let response = TopicResponse {
@@ -64,6 +72,11 @@ pub async fn get_topic(Path(slug): Path<String>) -> (StatusCode, Json<TopicRespo
     };
 
     (StatusCode::OK, Json(response))
+}
+
+#[derive(Deserialize)]
+struct LangParam {
+    lang: Option<String>,
 }
 
 #[derive(Deserialize)]
