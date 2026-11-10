@@ -15,13 +15,6 @@ type TopicData = {
   quizQuestions?: QuizQuestion[]
 }
 
-type RelatedTopic = {
-  id: number
-  title: string
-  slug: string
-  relationType: string
-}
-
 type MapNode = {
   id: string
   title: string
@@ -83,8 +76,6 @@ export default function App() {
     topics: [] as TopicData[],
   })
 
-  const [sharePayload, setSharePayload] = useState<{ fromTopic: string; toTopic: string; steps: number } | null>(null)
-
   const [showLanding, setShowLanding] = useState(true)
 
   const [selectedLanguage, setSelectedLanguage] = useState(() => {
@@ -92,19 +83,13 @@ export default function App() {
     return saved ? (saved === 'bn' ? 'bn' : saved === 'hi' ? 'hi' : 'en') : 'en'
   })
 
-  const languageOptions = [
-    { code: 'en', label: 'English' },
-    { code: 'hi', label: 'हिंदी' },
-    { code: 'bn', label: 'বাংলা' },
-  ]
-
   const [errorShare, setErrorShare] = useState(false)
 
   const [streakCurrent, setStreakCurrent] = useState(0)
   const [streakLongest, setStreakLongest] = useState(0)
   const [lastActive, setLastActive] = useState('Never')
 
-  const [payload, setPayload] = useState<{ fromTopic: string; toTopic: string; steps: number } | null>(null)
+  const [sharePayload, setSharePayload] = useState<{ fromTopic: string; toTopic: string; steps: number } | null>(null)
 
   // Load saved maps from localStorage on mount
   useEffect(() => {
@@ -129,7 +114,7 @@ export default function App() {
           error: false,
           topics: response.data.topics,
         })
-      } catch (err) {
+      } catch {
         setDailyTrail({
           error: true,
           topics: [],
@@ -149,8 +134,7 @@ export default function App() {
         setStreakCurrent(response.data.current)
         setStreakLongest(response.data.longest)
         setLastActive(response.data.last_active)
-      } catch (err) {
-        // Default values on error
+      } catch {
         setStreakCurrent(0)
         setStreakLongest(0)
         setLastActive('Never')
@@ -179,7 +163,7 @@ export default function App() {
       .force('link', d3.forceLink(graphEdges).id((d: any) => d.id))
       .force('charge', d3.forceManyBody().strength(-100))
       .force('center', d3.forceCenter().x(0).y(0))
-      .force('collide', d3.forceCollide().radius((d: any) => 50))
+      .force('collide', d3.forceCollide().radius(() => 50))
 
     const link = svg.append('g')
       .attr('class', 'links')
@@ -235,15 +219,15 @@ export default function App() {
 
     simulation.on('tick', () => {
       link.attr('x1', (d: any) => d.source.x)
-          .attr('y1', (d: any) => d.source.y)
-          .attr('x2', (d: any) => d.target.x)
-          .attr('y2', (d: any) => d.target.y)
+        .attr('y1', (d: any) => d.source.y)
+        .attr('x2', (d: any) => d.target.x)
+        .attr('y2', (d: any) => d.target.y)
 
       node.attr('cx', (d: any) => d.x)
-          .attr('cy', (d: any) => d.y)
+        .attr('cy', (d: any) => d.y)
 
       label.attr('x', (d: any) => d.x + 5)
-          .attr('y', (d: any) => d.y + 5)
+        .attr('y', (d: any) => d.y + 5)
     })
 
     return () => {
@@ -265,63 +249,6 @@ export default function App() {
     }
   }
 
-  // Load a topic and its related topics to build the graph
-  const loadTopic = async (topic: TopicData, lang?: string) => {
-    const langParam = lang ? `?lang=${lang}` : ''
-    setSelectedTopic({ ...topic, quizQuestions: [] })
-    setSearchResults([])
-    setGraphNodes([])
-    setGraphEdges([])
-
-    try {
-      const response = await axios.get(`/api/topics/${topic.slug}${langParam}`)
-      const data = response.data
-
-      // Build initial graph: topic + related topics
-      const nodes: MapNode[] = [
-        {
-          id: data.topic.slug,
-          title: data.topic.title,
-          slug: data.topic.slug,
-          summary: data.topic.summary || '',
-          x: 0,
-          y: 0,
-        },
-      ]
-
-      const edges: MapEdge[] = []
-
-      // Add up to 10 related topics (depth 1)
-      const maxRelated = Math.min(data.related.length, 10)
-      for (let i = 0; i < maxRelated; i++) {
-        const related = data.related[i]
-        nodes.push({
-          id: related.slug,
-          title: related.title,
-          slug: related.slug,
-          summary: '',
-          x: 0,
-          y: 0,
-        })
-        edges.push({ source: data.topic.slug, target: related.slug })
-      }
-
-      // Position nodes in a simple layout
-      const positionedNodes = positionNodes(nodes)
-
-      setGraphNodes(positionedNodes)
-      setGraphEdges(edges)
-
-      // Update selected topic with quiz questions from API
-      setSelectedTopic({
-        ...data.topic,
-        quizQuestions: data.topic.quizQuestions || [],
-      })
-    } catch (err) {
-      console.error('Load topic error:', err)
-    }
-  }
-
   // Position nodes around the center
   const positionNodes = (nodes: MapNode[]): MapNode[] => {
     const result = [...nodes]
@@ -340,39 +267,66 @@ export default function App() {
     return result
   }
 
-  // Add a node to the current map (when user expands a node)
-  const addNodeToMap = (node: MapNode) => {
-    // Check if node already exists in the map
-    if (graphNodes.some((n) => n.id === node.id)) return
+  // Load a topic and its related topics to build the graph
+  const loadTopic = async (topic: TopicData, lang?: string) => {
+    const langParam = lang ? `?lang=${lang}` : ''
+    setSelectedTopic({ ...topic, quizQuestions: [] })
+    setSearchResults([])
+    setGraphNodes([])
+    setGraphEdges([])
 
-    const newNodes = [...graphNodes, node]
-    setGraphNodes(newNodes)
+    try {
+      const response = await axios.get(`/api/topics/${topic.slug}${langParam}`)
+      const data = response.data
 
-    // Connect to the previously selected node
-    if (selectedTopic) {
-      setGraphEdges([...graphEdges, { source: selectedTopic.slug, target: node.id }])
+      const nodes: MapNode[] = [
+        {
+          id: data.topic.slug,
+          title: data.topic.title,
+          slug: data.topic.slug,
+          summary: data.topic.summary || '',
+          x: 0,
+          y: 0,
+        },
+      ]
+
+      const edges: MapEdge[] = []
+
+      const maxRelated = Math.min(data.related.length, 10)
+      for (let i = 0; i < maxRelated; i++) {
+        const related = data.related[i]
+        nodes.push({
+          id: related.slug,
+          title: related.title,
+          slug: related.slug,
+          summary: '',
+          x: 0,
+          y: 0,
+        })
+        edges.push({ source: data.topic.slug, target: related.slug })
+      }
+
+      setGraphNodes(positionNodes(nodes))
+      setGraphEdges(edges)
+
+      setSelectedTopic({
+        ...data.topic,
+        quizQuestions: data.topic.quizQuestions || [],
+      })
+    } catch (err) {
+      console.error('Load topic error:', err)
     }
   }
 
-  // Reset quiz state
-  const resetQuiz = () => setQuizState({
-    active: false,
-    questionIndex: 0,
-    score: 0,
-    answers: [],
-  })
-
-  // Submit quiz answer and move to next question
+  // Complete the daily trail
   const onTrailComplete = async () => {
     setDailyTrailIsLoading(true)
     try {
-      // Update streak
       const streakRes = await axios.get('/api/streak')
       setStreakCurrent(streakRes.data.current)
       setStreakLongest(streakRes.data.longest)
       setLastActive(streakRes.data.last_active)
 
-      // Save map from daily trail
       await axios.post('/api/save-map-from-trail')
       setTrailCompleted(true)
     } catch (err) {
@@ -398,22 +352,16 @@ export default function App() {
         answers: newAnswers,
       })
     } else {
-      // Daily trail topic completed - check if all 5 topics done
       setQuizState({
         active: false,
         questionIndex: selectedTopic?.quizQuestions?.length || 0,
         score: newScore,
         answers: newAnswers,
       })
-      // TODO: dispatch trail completion event
     }
   }
 
-  // Search for topics
-
-// Add a node to the current map (when user expands a node)
-
-// Delete a saved map
+  // Delete a saved map
   const deleteMap = (mapId: string) => {
     setSavedMaps((prev) => prev.filter((m) => m.id !== mapId))
   }
@@ -432,39 +380,33 @@ export default function App() {
   const saveMap = () => {
     if (!selectedTopic) return
 
-    const mapTitle = selectedTopic.title || 'Untitled Map'
     const newMap: SavedMap = {
       id: Date.now().toString(),
-      title: mapTitle,
+      title: selectedTopic.title || 'Untitled Map',
       nodes: graphNodes,
       edges: graphEdges,
       createdAt: Date.now(),
     }
 
-    // Enforce 5-map limit
-    if (savedMaps.length >= MAX_MAPS) {
-      // Remove the oldest map
-      const sorted = [...savedMaps].sort((a, b) => a.createdAt - b.createdAt)
-      const toRemove = sorted[0].id
-      const remaining = sorted.slice(1).map((m) => m.id)
-      setSavedMaps((prev) => prev.filter((m) => !remaining.includes(m.id) && m.id !== toRemove))
-    }
-
-    setSavedMaps((prev) => [...prev, newMap])
+    setSavedMaps((prev) => {
+      let next = [...prev]
+      if (next.length >= MAX_MAPS) {
+        // Enforce the 5-map limit by dropping the oldest map
+        next = next.sort((a, b) => a.createdAt - b.createdAt).slice(1)
+      }
+      return [...next, newMap]
+    })
   }
 
-  // Export map as SVG and show share card
+  // Export map and show share card
   const exportAndShareMap = async () => {
     if (!selectedTopic) return
     try {
-      const response = await axios.get(`/api/maps/${currentMapId}/export`)
-      const svg = response.data
-      // Extract topic titles from the graph for the share payload
+      await axios.get(`/api/maps/${currentMapId}/export`)
       const fromTopic = selectedTopic.title || 'Topic'
       const toTopic = graphNodes.length > 1 ? graphNodes[graphNodes.length - 1].title : 'Topic'
-      const steps = graphEdges.length + 1 // nodes + connections
+      const steps = graphEdges.length + 1
 
-      // Check 5-map free tier limit
       if (savedMaps.length >= MAX_MAPS) {
         setErrorShare(true)
         return
@@ -477,28 +419,29 @@ export default function App() {
     }
   }
 
-// Load a saved map
-
-// Delete a saved map
+  if (showLanding) {
+    return <LandingPage />
+  }
 
   return (
-    <div>
-      {showLanding && <LandingPage />}
-      {!showLanding && (
-        <div style={{ minHeight: '100vh', padding: '20px' }}>
-        <div style={{ marginBottom: '20px' }}>
-          <h2>RabitHole - Phase 2</h2>
+    <div style={{ minHeight: '100vh', padding: '20px' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <h2>RabitHole - Phase 2</h2>
 
         {/* Streak display header */}
-        <div style={{ margin: "20px 0", padding: "12px", background: "#f0f0f0", borderRadius: "8px" }}>
-          <span style={{ marginRight: "16px", fontWeight: "bold" }}>🔥 {streakCurrent}</span>
-          <span style={{ marginRight: "16px" }}>Longest: {streakLongest}</span>
-          <span style={{ fontSize: "12px", color: "#6b6375" }}>Last: {lastActive}</span>
-          <span style={{ marginLeft: "24px", fontSize: "12px", color: "#6b6375", cursor: "pointer", onClick: () => setSelectedLanguage(prev => prev === "bn" ? "en" : prev === "en" ? "hi" : "bn") }}>{selectedLanguage === "bn" ? "বাংলা" : selectedLanguage === "hi" ? "हिंदी" : "English"} ▾</span>
+        <div style={{ margin: '20px 0', padding: '12px', background: '#f0f0f0', borderRadius: '8px' }}>
+          <span style={{ marginRight: '16px', fontWeight: 'bold' }}>🔥 {streakCurrent}</span>
+          <span style={{ marginRight: '16px' }}>Longest: {streakLongest}</span>
+          <span style={{ fontSize: '12px', color: '#6b6375' }}>Last: {lastActive}</span>
+          <span
+            style={{ marginLeft: '24px', fontSize: '12px', color: '#6b6375', cursor: 'pointer' }}
+            onClick={() => setSelectedLanguage((prev) => (prev === 'bn' ? 'en' : prev === 'en' ? 'hi' : 'bn'))}
+          >
+            {selectedLanguage === 'bn' ? 'বাংলা' : selectedLanguage === 'hi' ? 'हिंदी' : 'English'} ▾
+          </span>
         </div>
 
-
-        {/* Daily trail section - shown on app mount for returning users */}
+        {/* Daily trail section */}
         <div style={{ marginBottom: '20px', padding: '12px', border: '1px solid #e5e4e7', borderRadius: '8px', background: '#f8f5f0' }}>
           <h3>Daily Trail</h3>
           <p>Explore 5 curated topics to build your curiosity streak</p>
@@ -509,70 +452,56 @@ export default function App() {
           ) : dailyTrail.topics.length === 0 ? (
             <p style={{ margin: '10px 0' }}>No trail available at this time.</p>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px', marginTop: '12px' }}>
-              {dailyTrail.topics.map((topic) => (
-                <div
-                  key={topic.slug}
-                  style={{
-                    padding: '12px',
-                    background: '#fff',
-                    border: '1px solid #e5e4e7',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    transition: 'background 0.2s',
-                  }}
-                  onClick={() => loadTopic(topic as TopicData, selectedLanguage)}
-                >
-                  <h4>{topic.title}</h4>
-                  <p style={{ fontSize: '12px', color: '#6b6375', margin: '4px 0' }}>{topic.summary || ''}</p>
-                </div>
-              ))}
-            </div>
-
-            {trailCompleted ? (
-              <div style={{ marginTop: '16px', padding: '16px', background: '#e5f7e5', border: '1px solid #a8d5a8', borderRadius: '8px' }}>
-                <h3>🎉 Trail Complete!</h3>
-                <p>You've explored all 5 daily topics!</p>
-                <p>Your streak has been incremented.</p>
-                <button
-                  onClick={() => {
-                    setTrailCompleted(false)
-                    setDailyTrailIsLoading(true)
-                    axios.get('/api/daily-trail').then(() => {
-                      axios.post('/api/save-map-from-trail').then(() => {
-                        setTimeout(() => setDailyTrailIsLoading(false), 500)
-                      })
-                    })
-                  }}
-                  style={{
-                    marginTop: '8px',
-                    padding: '8px 16px',
-                    background: '#aa3bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Start new trail
-                </button>
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px', marginTop: '12px' }}>
+                {dailyTrail.topics.map((topic) => (
+                  <div
+                    key={topic.slug}
+                    style={{
+                      padding: '12px',
+                      background: '#fff',
+                      border: '1px solid #e5e4e7',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      transition: 'background 0.2s',
+                    }}
+                    onClick={() => loadTopic(topic, selectedLanguage)}
+                  >
+                    <h4>{topic.title}</h4>
+                    <p style={{ fontSize: '12px', color: '#6b6375', margin: '4px 0' }}>{topic.summary || ''}</p>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <button
-                onClick={() => onTrailComplete()}
-                style={{
-                  marginTop: '16px',
-                  padding: '8px 16px',
-                  background: '#aa3bff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              >
-                Complete Trail
-              </button>
-            )}
+
+              {trailCompleted ? (
+                <div style={{ marginTop: '16px', padding: '16px', background: '#e5f7e5', border: '1px solid #a8d5a8', borderRadius: '8px' }}>
+                  <h3>🎉 Trail Complete!</h3>
+                  <p>You've explored all 5 daily topics!</p>
+                  <p>Your streak has been incremented.</p>
+                  <button
+                    onClick={() => {
+                      setTrailCompleted(false)
+                      setDailyTrailIsLoading(true)
+                      axios.get('/api/daily-trail').then(() => {
+                        axios.post('/api/save-map-from-trail').then(() => {
+                          setTimeout(() => setDailyTrailIsLoading(false), 500)
+                        })
+                      })
+                    }}
+                    style={{ marginTop: '8px', padding: '8px 16px', background: '#aa3bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                  >
+                    Start new trail
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => onTrailComplete()}
+                  style={{ marginTop: '16px', padding: '8px 16px', background: '#aa3bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  Complete Trail
+                </button>
+              )}
+            </>
           )}
         </div>
 
@@ -612,10 +541,10 @@ export default function App() {
             <p>{selectedTopic.summary || 'No summary available'}</p>
 
             {selectedTopic.quizQuestions && selectedTopic.quizQuestions.length > 0 && (
-              <div style={{ marginTop: '12px', fontFamily: '"Noto Sans Hindi", "Devanagari", serif' }}>
+              <div style={{ marginTop: '12px' }}>
                 <h4>Quiz</h4>
-                <p>{selectedTopic.quizQuestions[quizState.questionIndex].question}</p>
-                {selectedTopic.quizQuestions[quizState.questionIndex].options.map((opt, i) => (
+                <p>{selectedTopic.quizQuestions[quizState.questionIndex]?.question}</p>
+                {selectedTopic.quizQuestions[quizState.questionIndex]?.options.map((opt, i) => (
                   <button
                     key={i}
                     onClick={() => answerQuiz(i)}
@@ -635,7 +564,6 @@ export default function App() {
                     {opt}
                   </button>
                 ))}
-                ))}
                 {quizState.active && quizState.questionIndex < selectedTopic.quizQuestions.length - 1 && (
                   <p style={{ marginTop: '8px', fontSize: '12px', color: '#6b6375' }}>
                     Answer {quizState.questionIndex + 1} of {selectedTopic.quizQuestions.length}
@@ -651,14 +579,7 @@ export default function App() {
 
             <button
               onClick={() => loadTopic(selectedTopic, selectedLanguage)}
-              style={{
-                marginTop: '8px',
-                padding: '6px 12px',
-                background: '#f0f0f0',
-                border: '1px solid #e5e4e7',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
+              style={{ marginTop: '8px', padding: '6px 12px', background: '#f0f0f0', border: '1px solid #e5e4e7', borderRadius: '4px', cursor: 'pointer' }}
             >
               Load topic (reload graph)
             </button>
@@ -678,14 +599,14 @@ export default function App() {
           }}
         >
           {graphNodes.length > 0 && graphEdges.length > 0 && (
-            <div id="d3-graph" style={{ width: '100%', height: '100%' }}>
-              {/* D3 will be initialized in useEffect below */}
-            </div>
+            <div id="d3-graph" style={{ width: '100%', height: '100%' }} />
           )}
-          {graphNodes.length === 0 && <p style={{ textAlign: 'center', padding: '20px' }}>Search for a topic or select one to explore the graph.</p>}
+          {graphNodes.length === 0 && (
+            <p style={{ textAlign: 'center', padding: '20px' }}>Search for a topic or select one to explore the graph.</p>
+          )}
         </div>
 
-        {/* Node expansion panel (placeholder for click-to-expand) */}
+        {/* Node expansion hint */}
         {selectedTopic && graphNodes.some((n) => n.id !== selectedTopic.slug) && (
           <div style={{ marginTop: '16px' }}>
             <h4>Expand topic</h4>
@@ -703,27 +624,12 @@ export default function App() {
               {savedMaps.map((map) => (
                 <li
                   key={map.id}
-                  style={{
-                    listStyle: 'none',
-                    margin: '8px 0',
-                    padding: '8px',
-                    border: '1px solid #e5e4e7',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                  }}
+                  style={{ listStyle: 'none', margin: '8px 0', padding: '8px', border: '1px solid #e5e4e7', borderRadius: '4px', cursor: 'pointer' }}
                   onClick={() => loadMap(map.id)}
                 >
                   <strong>{map.title}</strong> ({map.nodes.length} nodes)
                   <button
-                    style={{
-                      float: 'right',
-                      marginLeft: '8px',
-                      padding: '4px 8px',
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#e5e4e7',
-                      cursor: 'pointer',
-                    }}
+                    style={{ float: 'right', marginLeft: '8px', padding: '4px 8px', background: 'transparent', border: 'none', color: '#6b6375', cursor: 'pointer' }}
                     onClick={(e) => {
                       e.stopPropagation()
                       deleteMap(map.id)
@@ -737,32 +643,14 @@ export default function App() {
           )}
           <button
             onClick={() => saveMap()}
-            style={{
-              marginTop: '8px',
-              width: '100%',
-              padding: '8px',
-              background: '#aa3bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
+            style={{ marginTop: '8px', width: '100%', padding: '8px', background: '#aa3bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
           >
             Save current map
           </button>
           {currentMapId && (
             <button
               onClick={() => exportAndShareMap()}
-              style={{
-                marginTop: '8px',
-                width: '100%',
-                padding: '8px',
-                background: '#128C7E',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
+              style={{ marginTop: '8px', width: '100%', padding: '8px', background: '#128C7E', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
             >
               Share Map
             </button>
@@ -773,12 +661,10 @@ export default function App() {
             </div>
           )}
         </div>
-      </div>
 
-      {/* Share card - shown after map save or daily trail complete */}
-      {payload && (
-        <ShareCard payload={payload} />
-      )}
+        {/* Share card */}
+        {sharePayload && <ShareCard payload={sharePayload} />}
+      </div>
     </div>
   )
 }
