@@ -1,38 +1,18 @@
 [build]
-  command = "npm run build"
-  publish = "frontend/dist"
+  base    = "frontend"
+  command = "npm ci && npm run build"
+  publish = "dist"
 
-[plugins]
-  [plugins.formacular]
-  enabled = false
-
-[[redirects]]
-  from = "/api/topics/:slug"
-  to = "/api/topics/:slug"
-  status = 200
-  headers = {
-    "Cache-Control" = "public, max-age=3600, stale-while-revalidate=86400"
-  }
+[build.environment]
+  NODE_VERSION = "22"
 
 [[redirects]]
-  from = "/api/search"
-  to = "/api/search"
+  from   = "/api/*"
+  to     = "https://YOUR-RAILWAY-DOMAIN/api/:splat"
   status = 200
-  headers = {
-    "Cache-Control" = "public, max-age=300, stale-while-revalidate=600"
-  }
+  force  = true
 
 [[redirects]]
-  from = "/api/daily-trail"
-  to = "/api/daily-trail"
+  from   = "/*"
+  to     = "/index.html"
   status = 200
-  headers = {
-    "Cache-Control" = "public, max-age=900, stale-while-revalidate=1800"
-  }
-
-[header]
-  for = "/*"
-  status = "200"
-  headers = {
-    "Cache-Control" = "public, max-age=3600, stale-while-revalidate=86400"
-  }

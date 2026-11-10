@@ -48,7 +48,7 @@ pub fn setup_routes() -> Router {
 }
 
 async fn create_class(Form(payload): Form<CreateClassPayload>) -> (StatusCode, Json<ClassSummary>) {
-    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+    let pool = init_pool(&crate::db::database_url()).await.unwrap();
 
     let class_id: i32 = sqlx::query_scalar(
         "INSERT INTO classes (name, description, subject, teacher_id, created_at) VALUES ($1, $2, $3, 1, NOW()) RETURNING id",
@@ -74,7 +74,7 @@ async fn create_class(Form(payload): Form<CreateClassPayload>) -> (StatusCode, J
 }
 
 async fn list_classes() -> (StatusCode, Json<Vec<ClassSummary>>) {
-    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+    let pool = init_pool(&crate::db::database_url()).await.unwrap();
 
     let classes: Vec<ClassSummary> = sqlx::query_as(
         "SELECT id, name, description, subject, created_at, teacher_id, (SELECT COUNT(*) FROM class_students WHERE class_id = classes.id) as student_count FROM classes",
@@ -87,7 +87,7 @@ async fn list_classes() -> (StatusCode, Json<Vec<ClassSummary>>) {
 }
 
 async fn join_class(Form(payload): Form<JoinClassPayload>, axum::extract::Path(_class_id): axum::extract::Path<i32>) -> StatusCode {
-    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+    let pool = init_pool(&crate::db::database_url()).await.unwrap();
 
     // Mock: add user to class
     let _ = sqlx::query(
@@ -101,7 +101,7 @@ async fn join_class(Form(payload): Form<JoinClassPayload>, axum::extract::Path(_
 }
 
 async fn list_class_students(axum::extract::Path(class_id): axum::extract::Path<i32>) -> (StatusCode, Json<Vec<i32>>) {
-    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+    let pool = init_pool(&crate::db::database_url()).await.unwrap();
 
     let students: Vec<i32> = sqlx::query_scalar(
         "SELECT student_id FROM class_students WHERE class_id = $1",
@@ -115,7 +115,7 @@ async fn list_class_students(axum::extract::Path(class_id): axum::extract::Path<
 }
 
 async fn class_stats(axum::extract::Path(class_id): axum::extract::Path<i32>) -> (StatusCode, Json<(i32, i32, i32)>) {
-    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+    let pool = init_pool(&crate::db::database_url()).await.unwrap();
 
     let (total_students, active_today, longest_streak) = sqlx::query_as(
         "SELECT COUNT(*), COUNT(DISTINCT student_id), COALESCE((SELECT longest_streak FROM class_streaks WHERE class_id = $1), 0) FROM class_students WHERE class_id = $1",

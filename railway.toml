@@ -1,9 +1,0 @@
-[build]
-  dockerfile = "Dockerfile"
-
-[deploy]
-  name = "rabithole-api"
-  branch = "main"
-
-[addons]
-  postgresql = true

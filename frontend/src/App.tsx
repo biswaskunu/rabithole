@@ -1,6 +1,6 @@
-import * as d3 from 'd3-force'
-import 'd3-selection'
-import 'd3-drag'
+import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide } from 'd3-force'
+import { select } from 'd3-selection'
+import { drag } from 'd3-drag'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import ShareCard from './ShareCard'
@@ -155,15 +155,15 @@ export default function App() {
   useEffect(() => {
     if (graphNodes.length === 0 || graphEdges.length === 0) return
 
-    const svg = d3.select('#d3-graph')
+    const svg = select('#d3-graph')
       .attr('width', document.getElementById('graph-area')?.clientWidth ?? 600)
       .attr('height', 400)
 
-    const simulation = d3.forceSimulation(graphNodes)
-      .force('link', d3.forceLink(graphEdges).id((d: any) => d.id))
-      .force('charge', d3.forceManyBody().strength(-100))
-      .force('center', d3.forceCenter().x(0).y(0))
-      .force('collide', d3.forceCollide().radius(() => 50))
+    const simulation = forceSimulation(graphNodes)
+      .force('link', forceLink(graphEdges).id((d: any) => d.id))
+      .force('charge', forceManyBody().strength(-100))
+      .force('center', forceCenter().x(0).y(0))
+      .force('collide', forceCollide().radius(() => 50))
 
     const link = svg.append('g')
       .attr('class', 'links')
@@ -196,7 +196,7 @@ export default function App() {
       .style('fill', '#fff')
       .style('pointer-events', 'none')
 
-    const drag = d3.drag<any>()
+    const drag = drag<any>()
       .on('start', (event: any, d: any) => {
         if (!event.active) simulation.alphaTarget(1)
         d.fx = d.x
@@ -235,7 +235,6 @@ export default function App() {
     }
   }, [graphNodes, graphEdges])
 
-  // Search for topics
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!searchQuery.trim()) return
@@ -361,12 +360,10 @@ export default function App() {
     }
   }
 
-  // Delete a saved map
   const deleteMap = (mapId: string) => {
     setSavedMaps((prev) => prev.filter((m) => m.id !== mapId))
   }
 
-  // Load a saved map
   const loadMap = (mapId: string) => {
     const map = savedMaps.find((m) => m.id === mapId)
     if (map) {
@@ -420,7 +417,7 @@ export default function App() {
   }
 
   if (showLanding) {
-    return <LandingPage />
+    return <LandingPage onContinue={() => setShowLanding(false)} />
   }
 
   return (
@@ -431,7 +428,7 @@ export default function App() {
         {/* Streak display header */}
         <div style={{ margin: '20px 0', padding: '12px', background: '#f0f0f0', borderRadius: '8px' }}>
           <span style={{ marginRight: '16px', fontWeight: 'bold' }}>🔥 {streakCurrent}</span>
-          <span style={{ marginRight: '16px' }}>Longest: {streakLongest}</span>
+          <span style={{ marginRight: '16x' }}>Longest: {streakLongest}</span>
           <span style={{ fontSize: '12px', color: '#6b6375' }}>Last: {lastActive}</span>
           <span
             style={{ marginLeft: '24px', fontSize: '12px', color: '#6b6375', cursor: 'pointer' }}
@@ -472,36 +469,36 @@ export default function App() {
                   </div>
                 ))}
               </div>
-
-              {trailCompleted ? (
-                <div style={{ marginTop: '16px', padding: '16px', background: '#e5f7e5', border: '1px solid #a8d5a8', borderRadius: '8px' }}>
-                  <h3>🎉 Trail Complete!</h3>
-                  <p>You've explored all 5 daily topics!</p>
-                  <p>Your streak has been incremented.</p>
-                  <button
-                    onClick={() => {
-                      setTrailCompleted(false)
-                      setDailyTrailIsLoading(true)
-                      axios.get('/api/daily-trail').then(() => {
-                        axios.post('/api/save-map-from-trail').then(() => {
-                          setTimeout(() => setDailyTrailIsLoading(false), 500)
-                        })
-                      })
-                    }}
-                    style={{ marginTop: '8px', padding: '8px 16px', background: '#aa3bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                  >
-                    Start new trail
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => onTrailComplete()}
-                  style={{ marginTop: '16px', padding: '8px 16px', background: '#aa3bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                >
-                  Complete Trail
-                </button>
-              )}
             </>
+          )}
+
+          {trailCompleted ? (
+            <div style={{ marginTop: '16px', padding: '16px', background: '#e5f7e5', border: '1px solid #a8d5a8', borderRadius: '8px' }}>
+              <h3>🎉 Trail Complete!</h3>
+              <p>You've explored all 5 daily topics!</p>
+              <p>Your streak has been incremented.</p>
+              <button
+                onClick={() => {
+                  setTrailCompleted(false)
+                  setDailyTrailIsLoading(true)
+                  axios.get('/api/daily-trail').then(() => {
+                    axios.post('/api/save-map-from-trail').then(() => {
+                      setTimeout(() => setDailyTrailIsLoading(false), 500)
+                    })
+                  })
+                }}
+                style={{ marginTop: '8px', padding: '8px 16px', background: '#aa3bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                Start new trail
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => onTrailComplete()}
+              style={{ marginTop: '16px', padding: '8px 16px', background: '#aa3bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+            >
+              Complete Trail
+            </button>
           )}
         </div>
 
@@ -576,13 +573,6 @@ export default function App() {
                 )}
               </div>
             )}
-
-            <button
-              onClick={() => loadTopic(selectedTopic, selectedLanguage)}
-              style={{ marginTop: '8px', padding: '6px 12px', background: '#f0f0f0', border: '1px solid #e5e4e7', borderRadius: '4px', cursor: 'pointer' }}
-            >
-              Load topic (reload graph)
-            </button>
           </div>
         )}
 

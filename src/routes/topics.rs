@@ -94,7 +94,7 @@ pub struct QuizQuestionResponse {
 }
 
 pub async fn get_topic_quiz(Path(slug): Path<String>) -> Json<Vec<QuizQuestionResponse>> {
-    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+    let pool = init_pool(&crate::db::database_url()).await.unwrap();
 
     let questions = sqlx::query_as::<_, QuizQuestionResponse>(
         "SELECT id, question, options::text, correct_option FROM quiz_questions WHERE topic_id = (SELECT id FROM topics WHERE slug = $1)",
@@ -118,7 +118,7 @@ pub struct AiExplanationPayload {
 }
 
 pub async fn get_topic_ai_explanation(Path(slug): Path<String>) -> Result<Json<AiExplanationResponse>, StatusCode> {
-    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+    let pool = init_pool(&crate::db::database_url()).await.unwrap();
 
     // Find topic by slug
     let topic = sqlx::query_as::<_, (i32, String, String)>(

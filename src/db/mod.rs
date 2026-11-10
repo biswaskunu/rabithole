@@ -1,6 +1,10 @@
 use sqlx::{PgPool, Row};
 use serde::Serialize;
 
+pub fn database_url() -> String {
+    std::env::var("DATABASE_URL").expect("DATABASE_URL must be set")
+}
+
 pub async fn init_pool(database_url: &str) -> Result<PgPool, sqlx::Error> {
     let pool = sqlx::PgPool::connect(database_url).await?;
     sqlx::query(
@@ -260,7 +264,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_find_related_topics_requires_hops() {
-        let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public")
+        let pool = init_pool(&crate::db::database_url())
             .await
             .expect("Failed to create pool");
         let result = find_related_topics(&pool, 1, 2).await;
@@ -269,7 +273,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_init_pool_creates_connection() {
-        let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public")
+        let pool = init_pool(&crate::db::database_url())
             .await
             .expect("Failed to create pool");
         let healthy = health_check(&pool).await;

@@ -74,7 +74,7 @@ pub fn setup_routes() -> Router {
 
 #[axum::debug_handler]
 async fn get_daily_trail() -> (StatusCode, Json<DailyTrailResponse>) {
-    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+    let pool = init_pool(&crate::db::database_url()).await.unwrap();
     // Use user_id 1 for MVP (will be replaced with real user auth later)
     let trail = generate_daily_trail(&pool, 1).await.unwrap_or_else(|_| DailyTrailResponse {
         date: chrono::Local::now().format("%Y-%m-%d").to_string(),
@@ -85,7 +85,7 @@ async fn get_daily_trail() -> (StatusCode, Json<DailyTrailResponse>) {
 }
 
 async fn get_streak() -> (StatusCode, Json<(i32, i32, String)>) {
-    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+    let pool = init_pool(&crate::db::database_url()).await.unwrap();
 
     let streak: (i32, i32, Option<String>) = sqlx::query_as(
         "SELECT current_streak, longest_streak, last_active_date FROM streaks WHERE user_id = 1",
@@ -102,7 +102,7 @@ async fn get_streak() -> (StatusCode, Json<(i32, i32, String)>) {
 }
 
 async fn save_map_from_trail() -> StatusCode {
-    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+    let pool = init_pool(&crate::db::database_url()).await.unwrap();
     // Use user_id 1 for MVP
     let trail = generate_daily_trail(&pool, 1).await.unwrap_or_else(|_| crate::db::DailyTrailResponse {
         date: chrono::Local::now().format("%Y-%m-%d").to_string(),
@@ -121,7 +121,7 @@ async fn save_map_from_trail() -> StatusCode {
 }
 
 async fn register(Form(_payload): Form<RegisterPayload>) -> (StatusCode, Json<AuthResponse>) {
-    let _pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+    let _pool = init_pool(&crate::db::database_url()).await.unwrap();
 
     // For MVP: accept any credentials, issue mock tokens (like original code)
     let token = "mock-access-token-for-dev";
@@ -135,7 +135,7 @@ async fn register(Form(_payload): Form<RegisterPayload>) -> (StatusCode, Json<Au
 }
 
 async fn login(Form(_payload): Form<LoginPayload>) -> (StatusCode, Json<AuthResponse>) {
-    let _pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+    let _pool = init_pool(&crate::db::database_url()).await.unwrap();
 
     // For MVP: accept any credentials, issue mock tokens (like original code)
     let token = "mock-access-token-for-dev";
@@ -148,8 +148,8 @@ async fn login(Form(_payload): Form<LoginPayload>) -> (StatusCode, Json<AuthResp
     (StatusCode::OK, Json(body))
 }
 
-async fn waitlist(Form(_payload): Form<WaitlistPayload>) -> (StatusCode, Json<WaitlistResponse>) {
-    let _pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+async fn waitlist(Json(_payload): Json<WaitlistPayload>) -> (StatusCode, Json<WaitlistResponse>) {
+    let _pool = init_pool(&crate::db::database_url()).await.unwrap();
 
     // For MVP: accept any email, store for later (mock implementation)
     let response = WaitlistResponse {

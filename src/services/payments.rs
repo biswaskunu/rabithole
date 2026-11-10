@@ -60,7 +60,7 @@ async fn verify_razorpayment(Form(payload): Form<RazorpayPaymentVerification>) -
     // In production, this would verify with Razorpay's public key
     // For MVP, accept verification and upgrade user tier
 
-    let pool = init_pool("postgres://rabithole:password@localhost:5432/rabithole?search_path=public").await.unwrap();
+    let pool = init_pool(&crate::db::database_url()).await.unwrap();
 
     // Update user tier to paid (user_id 1 for MVP)
     let _ = sqlx::query(
