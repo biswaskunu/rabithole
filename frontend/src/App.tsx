@@ -524,7 +524,7 @@ export default function App() {
                   onClick={() => loadTopic(topic as TopicData, selectedLanguage)}
                 >
                   <h4>{topic.title}</h4>
-                  <p style={{ fontSize: '12px', color: '#6b6375', margin: '4px 0' }}{' '}{topic.summary || ''}</p>
+                  <p style={{ fontSize: '12px', color: '#6b6375', margin: '4px 0' }}>{topic.summary || ''}</p>
                 </div>
               ))}
             </div>
