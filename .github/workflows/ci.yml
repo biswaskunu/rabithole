@@ -22,22 +22,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
         with:
-          version: 9
-          package_json_file: frontend/package.json
-
-      - name: Backend dependencies and build
-        working-directory: .
-        run: |
-          cargo update
-          cargo test
-          cargo build --release
+          node-version: 22
 
       - name: Install dependencies (frontend)
         working-directory: frontend
         run: |
-          pnpm install
-          pnpm run lint
-          pnpm run build
+          npm ci
+          npm run lint
+          npm run build
+
+      - name: Backend dependencies and build
+        working-directory: .
+        run: |
+          cargo test
+          cargo build --release

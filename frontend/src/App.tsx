@@ -1,3 +1,6 @@
+import * as d3 from 'd3-force'
+import 'd3-selection'
+import 'd3-drag'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import ShareCard from './ShareCard'
@@ -169,7 +172,7 @@ export default function App() {
     if (graphNodes.length === 0 || graphEdges.length === 0) return
 
     const svg = d3.select('#d3-graph')
-      .attr('width', parseInt($('#graph-area').css('min-width')))
+      .attr('width', document.getElementById('graph-area')?.clientWidth ?? 600)
       .attr('height', 400)
 
     const simulation = d3.forceSimulation(graphNodes)
@@ -211,7 +214,7 @@ export default function App() {
 
     const drag = d3.drag<any>()
       .on('start', (event: any, d: any) => {
-        if (!event.active) simulation.alphaTarget(1) = 0
+        if (!event.active) simulation.alphaTarget(1)
         d.fx = d.x
         d.fy = d.y
       })
@@ -379,7 +382,8 @@ export default function App() {
     }
   }
 
-  const q = selectedTopic?.quizQuestions?.[quizState.questionIndex]
+  const answerQuiz = (optionIndex: number) => {
+    const q = selectedTopic?.quizQuestions?.[quizState.questionIndex]
     if (!q) return
 
     const isCorrect = optionIndex === q.correctOption
@@ -406,34 +410,10 @@ export default function App() {
   }
 
   // Search for topics
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!searchQuery.trim()) return
 
-    setSearchResults([])
-    try {
-      const response = await axios.get(`/api/search?q=${encodeURIComponent(searchQuery)}`)
-      setSearchResults(response.data.results)
-    } catch (err) {
-      console.error('Search error:', err)
-    }
-  }
+// Add a node to the current map (when user expands a node)
 
-  // Add a node to the current map (when user expands a node)
-  const addNodeToMap = (node: MapNode) => {
-    // Check if node already exists in the map
-    if (graphNodes.some((n) => n.id === node.id)) return
-
-    const newNodes = [...graphNodes, node]
-    setGraphNodes(newNodes)
-
-    // Connect to the previously selected node
-    if (selectedTopic) {
-      setGraphEdges([...graphEdges, { source: selectedTopic.slug, target: node.id }])
-    }
-  }
-
-  // Delete a saved map
+// Delete a saved map
   const deleteMap = (mapId: string) => {
     setSavedMaps((prev) => prev.filter((m) => m.id !== mapId))
   }
@@ -497,28 +477,15 @@ export default function App() {
     }
   }
 
-  // Load a saved map
-  const loadMap = (mapId: string) => {
-    const map = savedMaps.find((m) => m.id === mapId)
-    if (map) {
-      setGraphNodes(map.nodes)
-      setGraphEdges(map.edges)
-      setCurrentMapId(mapId)
-    }
-  }
+// Load a saved map
 
-  // Delete a saved map
-  const deleteMap = (mapId: string) => {
-    setSavedMaps((prev) => prev.filter((m) => m.id !== mapId))
-  }
+// Delete a saved map
 
   return (
-    {showLanding ? (
-      <LandingPage
-        onJoin={() => setShowLanding(false)}
-      />
-    ) : (
-      <div style={{ minHeight: '100vh', padding: '20px' }}>
+    <div>
+      {showLanding && <LandingPage />}
+      {!showLanding && (
+        <div style={{ minHeight: '100vh', padding: '20px' }}>
         <div style={{ marginBottom: '20px' }}>
           <h2>RabitHole - Phase 2</h2>
 
